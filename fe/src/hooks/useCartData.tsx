@@ -63,12 +63,17 @@ export default function useCartData() {
   };
 
   /** Using useQuery for data fetching */
-  const { data: cart = [], isLoading, error, refetch } = useQuery<CartDetails[], Error>({
+  const {
+    data: cart = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery<CartDetails[], Error>({
     queryKey: ["cartData", isAuthenticated],
     queryFn: fetchCartData,
     enabled: typeof isAuthenticated === "boolean",
     retry: 2,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
   });
 
   return { cart, isLoading, error, refetch, transformCartData };

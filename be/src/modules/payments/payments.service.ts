@@ -1,8 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import axios from 'axios';
+import { PaymentProps } from 'src/common/types/payments/payment';
+import { PrismaService } from 'src/database/prisma/prisma.service';
 
 @Injectable()
 export class PaymentsService {
+  constructor(private readonly prismaService: PrismaService) {}
   private readonly clientId = process.env.PAYPAL_CLIENT_ID;
   private readonly secret = process.env.PAYPAL_SECRET;
   private readonly apiUrl = process.env.PAYPAL_API;
@@ -18,14 +21,18 @@ export class PaymentsService {
         'grant_type=client_credentials',
         {
           headers: {
-            Authorization: `Bearer ${auth}`,
+            Authorization: `Basic ${auth}`,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
         },
       );
 
-      return response.data.data.access_token;
+      return response.data.access_token;
     } catch (error) {
+      console.error(
+        'PayPal token error:',
+        error.response?.data || error.message,
+      );
       throw new HttpException(
         'Unable to fetch PayPal token',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -33,7 +40,7 @@ export class PaymentsService {
     }
   }
 
-  async captureOrder(orderId: string): Promise<string> {
+  async captureOrder(orderId: string): Promise<any> {
     const accessToken = await this.generateAccessToken();
     try {
       const response = await axios.post(
@@ -42,13 +49,17 @@ export class PaymentsService {
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
           },
         },
       );
 
       return response.data;
     } catch (error) {
+      console.error(
+        'PayPal capture error:',
+        error.response?.data || error.message,
+      );
       throw new HttpException(
         error.response?.data || 'Error capturing PayPal order',
         HttpStatus.BAD_REQUEST,
@@ -64,13 +75,104 @@ export class PaymentsService {
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
           },
         },
       );
+
+      return response.data;
     } catch (error) {
+      console.error(
+        'PayPal get order error:',
+        error.response?.data || error.message,
+      );
       throw new HttpException(
-        error.response?.data || 'Error capturing PayPal order',
+        error.response?.data || 'Error getting PayPal order details',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  async saveOrderDetails(orderId: string, userEmail: string) {
+    try {
+      const orderDetailsData = await this.getOrderDetails(orderId);
+
+      const existingUser = await this.prismaService.user.findUnique({
+        where: { email: userEmail },
+      });
+
+      if (!existingUser) {
+        return {
+          statusCode: 400,
+          success: false,
+          message: 'User not found',
+        };
+      }
+
+      // Validate required fields from PayPal response
+      if (!orderDetailsData?.purchase_units?.[0] || !orderDetailsData?.payer) {
+        throw new HttpException(
+          'Invalid order details from PayPal',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // Capture the payment
+      // const captureResponse = await this.captureOrder(orderId);
+
+      const payload: PaymentProps = {
+        amount: {
+          value: orderDetailsData.purchase_units[0].amount.value,
+          currencyCode: orderDetailsData.purchase_units[0].amount.currency_code,
+        },
+        payer: {
+          payerId: orderDetailsData.payer.payer_id,
+          email: orderDetailsData.payer.email_address,
+          name: {
+            givenName: orderDetailsData.payer.name.given_name,
+            surName: orderDetailsData.payer.name.surname,
+          },
+        },
+        method: 'PayPal',
+        address: orderDetailsData.shipping?.address
+          ? {
+              addressLine1: orderDetailsData.shipping.address.address_line_1,
+              countryCode: orderDetailsData.shipping.address.country_code,
+              postalCode: orderDetailsData.shipping.address.postal_code,
+            }
+          : null,
+      };
+
+      const savePayments = await this.prismaService.payment.create({
+        data: {
+          amount: JSON.stringify(payload.amount),
+          payer: JSON.stringify(payload.payer),
+          method: payload.method,
+          address: JSON.stringify(payload.address),
+          status: 'COMPLETED',
+          transactionId: orderDetailsData.id,
+          order: {
+            connect: { id: parseInt(orderDetailsData.id) },
+          },
+          user: {
+            connect: { id: existingUser.id },
+          },
+        },
+      });
+
+      return {
+        statusCode: 201,
+        success: true,
+        message: 'Payment saved successfully',
+        data: savePayments,
+      };
+    } catch (error) {
+      console.error('Error while saving data to database:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        error.message || 'Error while saving data to database',
         HttpStatus.BAD_REQUEST,
       );
     }

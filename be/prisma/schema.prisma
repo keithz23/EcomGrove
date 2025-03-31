@@ -23,7 +23,7 @@ model User {
   role            String   @default("user")
   phoneNumber     String?
   profile_picture String?
-  googleId String?
+  googleId        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -142,10 +142,18 @@ model Order {
 
 // Model Payment
 model Payment {
-  id        Int      @id @default(autoincrement())
-  amount    Decimal  @db.Decimal(10, 2)
-  method    String // E.g., 'Credit Card', 'PayPal'
-  status    String   @default("pending") // 'pending', 'completed', 'failed'
+  id      Int    @id @default(autoincrement())
+  amount  Json
+  payer   Json
+  method  String
+  address Json
+  status  String @default("pending")
+
+  // Add these fields
+  transactionId String? // PayPal order ID
+  captureId     String? // PayPal capture ID
+  rawResponse   Json? // The complete PayPal response
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

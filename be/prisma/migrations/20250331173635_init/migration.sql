@@ -108,9 +108,14 @@ CREATE TABLE `Order` (
 -- CreateTable
 CREATE TABLE `Payment` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `amount` DECIMAL(10, 2) NOT NULL,
+    `amount` JSON NOT NULL,
+    `payer` JSON NOT NULL,
     `method` VARCHAR(191) NOT NULL,
+    `address` JSON NOT NULL,
     `status` VARCHAR(191) NOT NULL DEFAULT 'pending',
+    `transactionId` VARCHAR(191) NULL,
+    `captureId` VARCHAR(191) NULL,
+    `rawResponse` JSON NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `orderId` INTEGER NOT NULL,

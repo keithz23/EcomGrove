@@ -10,7 +10,7 @@ export default function Checkout() {
 
   const handleApprove = (orderId: string) => {
     console.log("Order Approved with ID:", orderId);
-    // Handle post-payment actions like updating the backend
+    
   };
 
   return (

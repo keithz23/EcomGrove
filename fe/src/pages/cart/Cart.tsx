@@ -5,35 +5,43 @@ import { useAuthStore } from "../../store/useAuthStore";
 import toast from "react-hot-toast";
 import useCartData from "../../hooks/useCartData";
 import { Link } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function Cart({ onClose }: { onClose: () => void }) {
-  const { cart, isLoading, error, setCart, transformCartData, refetch } =
-    useCartData();
+  const { cart = [], isLoading, error, refetch } = useCartData();
   const { isAuthenticated } = useAuthStore();
+  const queryClient = useQueryClient();
 
-  /** Removes item from cart (API or local storage) */
-  const removeCartData = async (id: number) => {
-    try {
+  /** Removes item from cart */
+  const removeCartMutation = useMutation<number, Error, number>({
+    mutationFn: async (id: number) => {
       if (isAuthenticated) {
+        // Remove from server
         const response = await cartService.removeItem(id);
-        if (response.status === 200) {
-          toast.success("Deleted item successfully");
-          refetch();
-        }
+        if (response.status !== 200) throw new Error("Failed to delete item");
+        return id;
       } else {
+        // Remove from local storage
         const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
         const updatedCart = localCart.filter(
           (item: { id: number }) => item.id !== id
         );
         localStorage.setItem("cart", JSON.stringify(updatedCart));
-        toast.success("Deleted item from local storage");
-        setCart(transformCartData(updatedCart));
+        return id;
       }
-    } catch (err) {
-      console.error("Error removing item:", err);
+    },
+    onSuccess: () => {
+      toast.success("Deleted item successfully");
+      if (isAuthenticated) {
+        queryClient.invalidateQueries({ queryKey: ["cartData"] });
+      } else {
+        refetch();
+      }
+    },
+    onError: () => {
       toast.error("Failed to delete item. Please try again.");
-    }
-  };
+    },
+  });
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -64,9 +72,9 @@ export default function Cart({ onClose }: { onClose: () => void }) {
 
         {/* isLoading & Error Handling */}
         {isLoading ? (
-          <p className="text-center">isLoading...</p>
+          <p className="text-center">Loading...</p>
         ) : error ? (
-          <p className="text-red-500 text-center">{error}</p>
+          <p className="text-red-500 text-center">{error.message}</p>
         ) : cart.length > 0 ? (
           cart.map((item) => (
             <div
@@ -74,7 +82,7 @@ export default function Cart({ onClose }: { onClose: () => void }) {
               className="flex items-center gap-4 border-b pb-3 last:border-none mt-2"
             >
               <img
-                src={item.product.imagePath[0]?.url}
+                src={item.product.imagePath[0]?.url || "/default.png"}
                 alt={item.product.name}
                 className="w-16 h-16 object-cover rounded-md border"
               />
@@ -89,7 +97,7 @@ export default function Cart({ onClose }: { onClose: () => void }) {
               </span>
               <button
                 className="text-red-500 hover:text-red-600 p-2 rounded transition"
-                onClick={() => removeCartData(Number(item.cart.id))}
+                onClick={() => removeCartMutation.mutate(Number(item.cart.id))}
               >
                 <Trash size={20} />
               </button>
@@ -113,7 +121,7 @@ export default function Cart({ onClose }: { onClose: () => void }) {
                 .toFixed(2)}
             </span>
             <button className="mt-4 p-3 w-full bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-              <Link to={"/cart-details"}>View Cart Details</Link>
+              <Link to="/cart-details">View Cart Details</Link>
             </button>
           </div>
         )}
