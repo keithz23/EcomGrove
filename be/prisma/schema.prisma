@@ -146,7 +146,7 @@ model Payment {
   amount  Json
   payer   Json
   method  String
-  address Json
+  address Json?
   status  String @default("pending")
 
   // Add these fields

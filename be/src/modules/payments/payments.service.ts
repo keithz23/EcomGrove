@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import axios from 'axios';
 import { PaymentProps } from 'src/common/types/payments/payment';
 import { PrismaService } from 'src/database/prisma/prisma.service';
@@ -117,9 +122,6 @@ export class PaymentsService {
         );
       }
 
-      // Capture the payment
-      // const captureResponse = await this.captureOrder(orderId);
-
       const payload: PaymentProps = {
         amount: {
           value: orderDetailsData.purchase_units[0].amount.value,
@@ -152,7 +154,7 @@ export class PaymentsService {
           status: 'COMPLETED',
           transactionId: orderDetailsData.id,
           order: {
-            connect: { id: parseInt(orderDetailsData.id) },
+            connect: { id: 1 },
           },
           user: {
             connect: { id: existingUser.id },
@@ -175,6 +177,97 @@ export class PaymentsService {
         error.message || 'Error while saving data to database',
         HttpStatus.BAD_REQUEST,
       );
+    }
+  }
+
+  async findAll(userEmail: string, page: number = 1, limit: number = 10) {
+    const existingUser = await this.prismaService.user.findUnique({
+      where: { email: userEmail },
+    });
+    try {
+      const skip = (page - 1) * limit;
+      const [paymentData, total] = await Promise.all([
+        this.prismaService.payment.findMany({
+          where: { userId: existingUser.id },
+          skip,
+          take: limit,
+        }),
+        this.prismaService.payment.count(),
+      ]);
+
+      const formattedPaymentData = paymentData.map((payment) => ({
+        ...payment,
+        amount: JSON.parse(payment.amount as string),
+        payer: JSON.parse(payment.payer as string),
+        address: payment.address ? JSON.parse(payment.address as string) : null,
+      }));
+
+      return {
+        statusCode: 200,
+        message: 'Fetched payment data successfully',
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+        data: formattedPaymentData,
+      };
+    } catch (error: any) {
+      console.error('Error while fetching all payments data', error.message);
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async findOneById(userEmail: string, paymentId: number) {
+    try {
+      const existingUser = await this.prismaService.user.findUnique({
+        where: { email: userEmail },
+      });
+
+      if (!existingUser) {
+        return {
+          statusCode: 400,
+          success: false,
+          message: 'User not found',
+        };
+      }
+
+      const paymentData = await this.prismaService.payment.findUnique({
+        where: { userId: existingUser.id, id: paymentId },
+      });
+
+      if (!paymentData) {
+        return {
+          statusCode: 404,
+          success: false,
+          message: 'Payment not found',
+        };
+      }
+
+      const safeParse = (data: any) => {
+        try {
+          return data ? JSON.parse(data) : null;
+        } catch (error) {
+          console.error('Error parsing JSON:', error.message);
+          return null;
+        }
+      };
+
+      const formattedPaymentData = {
+        ...paymentData,
+        amount: safeParse(paymentData.amount as string),
+        payer: safeParse(paymentData.payer as string),
+        address: paymentData.address
+          ? safeParse(paymentData.address as string)
+          : null,
+      };
+
+      return {
+        statusCode: 200,
+        message: 'Fetched payment data successfully',
+        data: formattedPaymentData,
+      };
+    } catch (error: any) {
+      console.error('Error while fetching payment data', error.message);
+      throw new InternalServerErrorException(error.message);
     }
   }
 }

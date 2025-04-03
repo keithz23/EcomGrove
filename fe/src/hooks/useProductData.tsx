@@ -1,7 +1,7 @@
 import { product } from "../interfaces";
-import { productService } from "../services/productService";
 import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
+import { productService } from "../services";
 
 export const useProductData = () => {
   /** Fetch products data from the API */

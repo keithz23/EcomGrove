@@ -1,5 +1,4 @@
-import { ECartService } from "../enums/services/ECartService";
-import { EService } from "../enums/services/EService";
+import { ECartService, EService } from "../enums/services";
 import { CartProps } from "../interfaces/cart";
 import { instance } from "../lib/axios";
 

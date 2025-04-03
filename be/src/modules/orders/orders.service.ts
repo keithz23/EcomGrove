@@ -5,8 +5,6 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 
 @Injectable()
@@ -80,12 +78,15 @@ export class OrdersService {
     }
   }
 
-  async findAll(id: number, page: number = 1, limit: number = 10) {
+  async findAll(userEmail: string, page: number = 1, limit: number = 10) {
+    const existingUser = await this.prismaService.user.findUnique({
+      where: { email: userEmail },
+    });
     try {
       const skip = (page - 1) * limit;
       const [orderData, total] = await Promise.all([
         this.prismaService.order.findMany({
-          where: { id: id },
+          where: { id: existingUser.id },
           skip,
           take: limit,
         }),

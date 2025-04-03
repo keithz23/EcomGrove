@@ -1,5 +1,4 @@
-import { EService } from "../enums/services/EService";
-import { EUserService } from "../enums/services/EUserService";
+import { EService, EUserService } from "../enums/services";
 import { IUserUpdate } from "../interfaces";
 import { instance } from "../lib/axios";
 
@@ -12,6 +11,7 @@ export const userService = {
 
   sendOtpCode: () => {
     const url = `${EService.USER_SERVICE}/${EUserService.SEND_OTP}`;
+
     return instance.post(url, {});
   },
 

@@ -1,11 +1,9 @@
-import BackToHome from "../components/common/BackToHome";
 import {
   IChangePassword,
   IUserUpdate,
   profile,
   profileInput,
 } from "../interfaces";
-import { userService } from "../services/userService";
 import toast, { Toaster } from "react-hot-toast";
 import Modal from "../components/common/Modal";
 import { useState } from "react";
@@ -13,6 +11,8 @@ import { ModalUpload } from "../components/common/ModalUpload";
 import { authService } from "../services/authService";
 import { useAuthStore } from "../store/useAuthStore";
 import { useProfileData } from "../hooks";
+import { userService } from "../services";
+import BackToHome from "../components/common/BackToHome";
 
 export default function Profile() {
   const { formData, updateFormData, handleChange, isGoogleLogin } =

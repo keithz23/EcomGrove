@@ -7,7 +7,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import Modal from "../components/common/Modal";
-import { cartService } from "../services/cartService";
+import { cartService } from "../services";
 
 export default function Home() {
   const { isAuthenticated } = useAuthStore();

@@ -1,8 +1,6 @@
-import { EAuthService } from "../enums/services/EAuthService";
-import { EService } from "../enums/services/EService";
+import { EAuthService, EService } from "../enums/services";
 import { IChangePassword, IUserSignup } from "../interfaces";
 import { instance } from "../lib/axios";
-
 
 export const authService = {
   signup: (data: IUserSignup) => {

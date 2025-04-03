@@ -1,5 +1,5 @@
 // src/common/Message.tsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface MessageProps {
   type: "success" | "error";

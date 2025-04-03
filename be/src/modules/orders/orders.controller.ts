@@ -35,8 +35,8 @@ export class OrdersController {
   @Get('fetch-all')
   async findAll(@Req() req: Request, @Res() res: Response) {
     try {
-      const id = (req.user as any).id;
-      const response = await this.ordersService.findAll(+id);
+      const userEmail = (req.user as any).email;
+      const response = await this.ordersService.findAll(userEmail);
       return res.status(200).json(response);
     } catch (error) {
       console.error('Error fetching orders:', error);

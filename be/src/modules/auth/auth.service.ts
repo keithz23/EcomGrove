@@ -10,7 +10,6 @@ import { PrismaService } from 'src/database/prisma/prisma.service';
 import * as argon from 'argon2';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
-import { MailService } from 'src/utils/mail.service';
 import { UtilOtp } from 'src/utils/otp';
 import { ForgotDto } from './dto/forgot.dto';
 import { ResetPasswordDto } from './dto/reset.dto';
@@ -18,6 +17,17 @@ import { OAuth2Client } from 'google-auth-library';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { ChangePasswordDto } from './dto/changePassword.dto';
+import { MailService } from 'src/utils';
+import { LoginProps } from 'src/common/types/auth/login';
+import { LoginResponse } from 'src/common/types/response/auth/login';
+
+interface DataResponse {
+  success?: boolean;
+  statusCode?: number;
+  message?: string;
+  data?: object;
+  token?: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -28,9 +38,9 @@ export class AuthService {
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
-  ) { }
+  ) {}
 
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto): Promise<DataResponse> {
     const { firstName, lastName, username, email, password, phoneNumber } =
       registerDto;
 
@@ -57,7 +67,7 @@ export class AuthService {
 
         const hashedPassword = await argon.hash(password);
 
-        const newUser = await prisma.user.create({
+        await prisma.user.create({
           data: {
             firstName,
             lastName,
@@ -72,7 +82,6 @@ export class AuthService {
           statusCode: 201,
           success: true,
           message: 'Account created successfully',
-          data: newUser,
         };
       });
     } catch (err: any) {
@@ -81,7 +90,7 @@ export class AuthService {
     }
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<LoginResponse> {
     const { email, password } = loginDto;
 
     try {
@@ -109,7 +118,7 @@ export class AuthService {
         };
       }
 
-      const payload = {
+      const payload: LoginProps = {
         id: existingUser.id,
         firstName: existingUser.firstName,
         lastName: existingUser.lastName,
@@ -144,7 +153,7 @@ export class AuthService {
     }
   }
 
-  async googleLogin(token: string) {
+  async googleLogin(token: string): Promise<DataResponse> {
     try {
       const ticket = await this.client.verifyIdToken({
         idToken: token,
@@ -172,11 +181,12 @@ export class AuthService {
           return {
             statusCode: 400,
             success: false,
-            message: 'This email has already been registered with a password. Please log in using your password.',
+            message:
+              'This email has already been registered with a password. Please log in using your password.',
           };
         }
 
-        const jwtToken = this.signToken({ sub, email, picture, name });
+        const jwtToken = await this.signToken({ sub, email, picture, name });
         return {
           statusCode: 200,
           success: true,
@@ -197,7 +207,7 @@ export class AuthService {
         },
       });
 
-      const jwtToken = this.signToken({ sub, email, picture, name });
+      const jwtToken = await this.signToken({ sub, email, picture, name });
 
       return {
         statusCode: 201,
@@ -211,8 +221,8 @@ export class AuthService {
     }
   }
 
-
-  async forgotPassword(payload: ForgotDto) {
+  // Return is missing
+  async forgotPassword(payload: ForgotDto): Promise<DataResponse> {
     const { email } = payload;
 
     try {
@@ -244,13 +254,15 @@ export class AuthService {
         String(otp),
         otpExpiry,
       );
+
+      return {};
     } catch (err: any) {
       console.error('Error while generating otp', err.message);
       throw new BadRequestException('Error while generating otp');
     }
   }
 
-  async resetPassword(payload: ResetPasswordDto) {
+  async resetPassword(payload: ResetPasswordDto): Promise<DataResponse> {
     const { otp, password, confirmPassword } = payload;
 
     try {
@@ -296,19 +308,24 @@ export class AuthService {
     }
   }
 
-  async changePassword(email: string, changePasswordDto: ChangePasswordDto, otp: string) {
-    const { currentPassword, newPassword, confirmNewPassword } = changePasswordDto;
+  async changePassword(
+    email: string,
+    changePasswordDto: ChangePasswordDto,
+    otp: string,
+  ): Promise<DataResponse> {
+    const { currentPassword, newPassword, confirmNewPassword } =
+      changePasswordDto;
 
     try {
       const existingUser = await this.prismaService.user.findUnique({
-        where: { email }
+        where: { email },
       });
 
       if (!existingUser) {
         return {
           statusCode: 400,
           success: false,
-          message: "These credentials do not exist in the system."
+          message: 'These credentials do not exist in the system.',
         };
       }
 
@@ -316,38 +333,43 @@ export class AuthService {
         return {
           statusCode: 400,
           success: false,
-          message: "You signed in with Google. Password change is not allowed."
+          message: 'You signed in with Google. Password change is not allowed.',
         };
       }
 
       const validOtp = await this.prismaService.user.findUnique({
         where: { passwordResetToken: otp },
-        select: { passwordResetExpiry: true }
-      })
+        select: { passwordResetExpiry: true },
+      });
 
       if (!validOtp) {
         return {
           statusCode: 400,
           success: false,
-          message: 'OTP is invalid'
-        }
+          message: 'OTP is invalid',
+        };
       }
 
-      if (validOtp.passwordResetExpiry && validOtp.passwordResetExpiry < new Date()) {
+      if (
+        validOtp.passwordResetExpiry &&
+        validOtp.passwordResetExpiry < new Date()
+      ) {
         return {
           statusCode: 400,
           success: false,
-          message: 'OTP has expired'
-        }
+          message: 'OTP has expired',
+        };
       }
 
-
-      const isValidPassword = await argon.verify(existingUser.password, currentPassword);
+      const isValidPassword = await argon.verify(
+        existingUser.password,
+        currentPassword,
+      );
       if (!isValidPassword) {
         return {
           statusCode: 400,
           success: false,
-          message: "Invalid password."
+          message: 'Invalid password.',
         };
       }
 
@@ -355,7 +377,7 @@ export class AuthService {
         return {
           statusCode: 400,
           success: false,
-          message: "New password cannot be the same as the old password."
+          message: 'New password cannot be the same as the old password.',
         };
       }
 
@@ -363,7 +385,7 @@ export class AuthService {
         return {
           statusCode: 400,
           success: false,
-          message: "Passwords do not match."
+          message: 'Passwords do not match.',
         };
       }
 
@@ -371,29 +393,29 @@ export class AuthService {
 
       await this.prismaService.user.update({
         where: { email },
-        data: { password: hashedPassword }
+        data: { password: hashedPassword },
       });
 
       await this.mailService.sendPasswordChangeNotification(
         existingUser.email,
-        existingUser.username
-      )
+        existingUser.username,
+      );
       return {
         statusCode: 200,
         success: true,
-        message: "Password changed successfully."
+        message: 'Password changed successfully.',
       };
     } catch (error) {
       console.error(`Error while changing password: ${error.message}`);
       return {
         statusCode: 500,
         success: false,
-        message: "An unexpected error occurred. Please try again."
+        message: 'An unexpected error occurred. Please try again.',
       };
     }
   }
 
-  async profile(email: string) {
+  async profile(email: string): Promise<DataResponse> {
     try {
       const response = await this.prismaService.user.findUnique({
         where: { email: email },

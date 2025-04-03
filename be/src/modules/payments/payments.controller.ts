@@ -58,7 +58,47 @@ export class PaymentsController {
       return res.status(500).json({
         success: false,
         statusCode: 500,
-        message: 'Interal Server Error',
+        message: 'Internal Server Error',
+      });
+    }
+  }
+
+  @UseGuards(JwtPaymentsGuard)
+  @Get()
+  async findAll(@Req() req: Request, @Res() res: Response) {
+    const userEmail = (req.user as any).email;
+    try {
+      const response = await this.paymentsService.findAll(userEmail);
+
+      return res.status(200).json(response);
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        statusCode: 500,
+        message: 'Internal Server Error',
+      });
+    }
+  }
+
+  @UseGuards(JwtPaymentsGuard)
+  @Get(':paymentId')
+  async findOneById(
+    @Param('paymentId') paymentId: number,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const userEmail = (req.user as any).email;
+    try {
+      const response = await this.paymentsService.findOneById(
+        userEmail,
+        paymentId,
+      );
+
+      return res.status(200).json(response);
+    } catch (error) {
+      return res.status(500).json({
+        statusCode: 500,
+        message: 'Internal Server Error',
       });
     }
   }

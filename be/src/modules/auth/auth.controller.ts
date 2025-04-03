@@ -10,12 +10,12 @@ import {
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { Helper } from 'src/utils/helper';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { ForgotDto } from './dto/forgot.dto';
 import { ResetPasswordDto } from './dto/reset.dto';
 import { ChangePasswordDto } from './dto/changePassword.dto';
+import { Helper } from 'src/utils';
 
 @Controller('auth')
 export class AuthController {

@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { CartDetails } from "../interfaces/cart";
 import { useAuthStore } from "../store/useAuthStore";
-import { cartService } from "../services/cartService";
 import toast from "react-hot-toast";
+import { cartService } from "../services";
 
 export default function useCartData() {
   const { isAuthenticated } = useAuthStore();

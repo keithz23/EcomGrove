@@ -6,7 +6,7 @@ import { PrismaModule } from 'src/database/prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { JwtStrategy } from 'src/common/strategy/jwt.strategy';
-import { MailService } from 'src/utils/mail.service';
+import { MailService } from 'src/utils';
 
 @Module({
   imports: [

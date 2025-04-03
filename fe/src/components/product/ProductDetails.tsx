@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { productService } from "../../services/productService";
 import { Heart, ShoppingCart, Minus, Plus, Star } from "lucide-react";
 import { ProductItems } from "../../utils";
 import Header from "../common/Header";
@@ -11,6 +10,7 @@ import { CartProps } from "../../interfaces/cart";
 import toast, { Toaster } from "react-hot-toast";
 import { ProductDetailsProps, ProductImage } from "../../interfaces";
 import { useAuthStore } from "../../store/useAuthStore";
+import { productService } from "../../services";
 
 export default function ProductDetails() {
   const { id } = useParams<{ id: string }>();

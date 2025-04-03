@@ -6,14 +6,13 @@ import { PrismaService } from 'src/database/prisma/prisma.service';
 import * as argon from 'argon2';
 import { UtilOtp } from 'src/utils/otp';
 import { MailService } from 'src/utils/mail.service';
-import { OtpDto } from './dto/otp.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly mailService: MailService,
-  ) { }
+  ) {}
   create(createUserDto: CreateUserDto) {
     const { firstName, lastName, email, username, password, phoneNumber } =
       createUserDto;
@@ -107,10 +106,9 @@ export class UsersService {
   async updateUserProfile(
     userEmail: string,
     userUpdate: UpdateProfileDto,
-    otp: string
+    otp: string,
   ) {
-    const { firstName, lastName, username, email, phoneNumber } =
-      userUpdate;
+    const { firstName, lastName, username, email, phoneNumber } = userUpdate;
     try {
       return await this.prismaService.$transaction(async (prisma) => {
         const existingUser = await prisma.user.findFirst({
@@ -195,7 +193,7 @@ export class UsersService {
     try {
       return await this.prismaService.$transaction(async (prisma) => {
         const existingUser = await prisma.user.findFirst({
-          where: { email: userEmail }
+          where: { email: userEmail },
         });
 
         if (!existingUser) {
@@ -208,7 +206,7 @@ export class UsersService {
 
         const updatedUser = await prisma.user.update({
           where: { email: userEmail },
-          data: { profile_picture: imagePath }
+          data: { profile_picture: imagePath },
         });
 
         if (!updatedUser) {
@@ -222,7 +220,7 @@ export class UsersService {
         return {
           statusCode: 200,
           success: true,
-          message: 'Avatar changed successfully'
+          message: 'Avatar changed successfully',
         };
       });
     } catch (error) {
@@ -234,7 +232,6 @@ export class UsersService {
       };
     }
   }
-
 
   remove(id: number) {
     return `This action removes a #${id} user`;

@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 import { CloudUpload, X } from "lucide-react";
-import { userService } from "../../services/userService";
 import toast from "react-hot-toast";
 import Loading from "./Loading";
+import { userService } from "../../services";
 
 interface ModalUploadProps {
   isOpen: boolean;

@@ -1,8 +1,8 @@
 import { create } from "zustand";
-import { authService } from "../services/authService";
 import toast from "react-hot-toast";
 import { AuthResponse, IUserSignup, User } from "../interfaces";
 import { AxiosError } from "axios";
+import { authService } from "../services";
 
 interface AuthState {
   user: User | null;

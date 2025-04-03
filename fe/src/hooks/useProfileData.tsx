@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { authService } from "../services/authService";
 import { profile } from "../interfaces";
 import toast from "react-hot-toast";
+import { authService } from "../services";
 
 export const useProfileData = () => {
   const [formData, setFormData] = useState<profile>();
