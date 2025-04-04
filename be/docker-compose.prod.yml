@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  server-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: container-prod
+    env_file: .env.production
+    ports:
+      - 9001:9000 
+    networks:
+      - prod-net
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: '2G'
+    restart: always
+
+  mysql-prod:
+    image: mysql:latest
+    container_name: container-mysql-prod
+    env_file:
+      - .env.production
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DATABASE_PASSWORD}
+      - MYSQL_DATABASE=${DATABASE_URL}
+    networks:
+      - prod-net
+    ports:
+      - 3307:3306
+    volumes:
+      - prod_mysql_data:/var/lib/mysql
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: '2G'
+    restart: always
+
+  redis:
+    image: redis:latest
+    container_name: container-redis-prod
+    ports:
+      - '6380:6379'
+    volumes:
+      - redis-db:/data
+    networks:
+      - ecomgrove-networks
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: '2G'
+        reservations:
+          cpus: '0.5'
+          memory: '64M'
+    restart: always
+
+networks:
+  prod-net:
+
+volumes:
+  prod_mysql_data:
+  redis-db:

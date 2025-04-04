@@ -1,0 +1,52 @@
+services:
+  server-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: container-dev
+    env_file: 
+      - .env.development
+    ports:
+      - 9001:9000
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - dev-net
+    restart: always
+    depends_on:
+      - mysql-dev
+
+  mysql-dev:
+    image: mysql:latest
+    container_name: container-mysql-dev
+    env_file:
+      - .env.development
+    environment:
+      - MYSQL_ROOT_PASSWORD=keith@0309
+      - MYSQL_DATABASE=ecommerce_project
+    networks:
+      - dev-net
+    ports:
+      - 3307:3306
+    volumes:
+      - dev_mysql_data:/var/lib/mysql
+    restart: always
+
+  redis:
+    image: redis:latest
+    container_name: container-redis-dev
+    ports:
+      - '6380:6379'
+    volumes:
+      - redis-db:/data
+    networks:
+      - dev-net
+    restart: always
+
+networks:
+  dev-net:
+
+volumes:
+  dev_mysql_data:
+  redis-db:
