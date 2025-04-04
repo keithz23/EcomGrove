@@ -20,7 +20,7 @@ Ensure the following are installed on your system:
 
 ### 1. Clone the project
 ```bash
-git clone git@github.com:Keiter0309/EcomGrove.git
+git clone git@github.com:keithz23/EcomGrove.git
 cd EcomGrove
 ```
 
@@ -81,6 +81,11 @@ AWS_ACCESS_KEY_ID=your_access_key_id
 AWS_SECRET_ACCESS_KEY=your_secret_access_key
 AWS_REGION=your_region_name
 AWS_BUCKET_NAME=your_bucket_name
+
+# Paypal Configuration
+PAYPAL_CLIENT_ID=your_paypal_client_id
+PAYPAL_SECRET=your_paypal_secret
+PAYPAL_API=your_paypal_api
 
 # Server Configuration
 PORT=9000
