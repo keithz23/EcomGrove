@@ -22,7 +22,7 @@ export class AddressController {
   constructor(private readonly addressService: AddressService) {}
 
   @UseGuards(JwtAddresssGuard)
-  @Post('add-address')
+  @Post()
   async create(
     @Body() createAddressDto: CreateAddressDto,
     @Req() req: Request,
@@ -42,14 +42,17 @@ export class AddressController {
   }
 
   @UseGuards(JwtAddresssGuard)
-  @Patch('update-address')
+  @Patch()
   async update(
     @Body() updateAddressDto: UpdateAddressDto,
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const id = await (req.user as any).id;
-    const response = await this.addressService.update(+id, updateAddressDto);
+    const userEmail = (req.user as any).email;
+    const response = await this.addressService.update(
+      userEmail,
+      updateAddressDto,
+    );
 
     return res.status(200).json(response);
   }

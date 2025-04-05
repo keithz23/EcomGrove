@@ -1,4 +1,7 @@
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { AxiosError } from "axios";
+import toast from "react-hot-toast";
+import { ordersService } from "../../services/order";
 
 export default function Checkout() {
   const initialOptions = {
@@ -8,9 +11,28 @@ export default function Checkout() {
     intent: "capture",
   };
 
-  const handleApprove = (orderId: string) => {
-    console.log("Order Approved with ID:", orderId);
-    
+  //Add a checkout page including product information, address, payment method, and coupon.
+
+  const handleApprove = async (orderId: string) => {
+    try {
+      const response = await ordersService.createOrders();
+
+      if (response && response.data?.message) {
+        toast.success(response.data.message);
+      }
+      console.log(`Approve id:: ${orderId}`);
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        const errorMessage =
+          error.response?.data?.message ||
+          "An error occurred. Please try again.";
+        toast.error(errorMessage);
+        console.error(errorMessage);
+      } else {
+        toast.error("An unexpected error occurred");
+        console.error(error);
+      }
+    }
   };
 
   return (

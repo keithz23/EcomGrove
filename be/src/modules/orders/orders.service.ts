@@ -1,21 +1,92 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import axios from 'axios';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 
 @Injectable()
 export class OrdersService {
   constructor(private readonly prismaService: PrismaService) {}
+  private readonly clientId = process.env.PAYPAL_CLIENT_ID;
+  private readonly secret = process.env.PAYPAL_SECRET;
+  private readonly apiUrl = process.env.PAYPAL_API;
 
-  async create(id: number) {
+  async generateAccessToken(): Promise<string> {
+    const auth = Buffer.from(`${this.clientId}:${this.secret}`).toString(
+      'base64',
+    );
+
+    try {
+      const response = await axios.post(
+        `${this.apiUrl}/v1/oauth2/token`,
+        'grant_type=client_credentials',
+        {
+          headers: {
+            Authorization: `Basic ${auth}`,
+            'Content-Type': 'application/x-www-urlencoded',
+          },
+        },
+      );
+
+      return response.data.access_token;
+    } catch (error) {
+      console.error(
+        'Paypal token error:',
+        error.response?.data || error.message,
+      );
+      throw new HttpException(
+        'Unable to fetch Paypal token',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getOrderDetails(orderId: string): Promise<string> {
+    const accessToken = await this.generateAccessToken();
+
+    try {
+      const response = await axios.get(
+        `${this.apiUrl}/v2/checkout/orders/${orderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error(
+        'PayPal get order error:',
+        error.response?.data || error.message,
+      );
+    }
+  }
+
+  async create(userEmail: string) {
     try {
       return await this.prismaService.$transaction(async (prisma) => {
+        const user = await prisma.user.findUnique({
+          where: { email: userEmail },
+        });
+
+        if (!user) {
+          return {
+            success: false,
+            statusCode: 400,
+            message: 'User not found',
+          };
+        }
+
         const cartItems = await prisma.cart.findMany({
-          where: { userId: id },
+          where: { userId: user.id },
           include: {
             product: true,
             user: true,
@@ -23,7 +94,11 @@ export class OrdersService {
         });
 
         if (cartItems.length === 0) {
-          throw new NotFoundException('Cart is empty for the user');
+          return {
+            success: false,
+            statusCode: 400,
+            message: 'Cart is empty for the user',
+          };
         }
 
         const orders = [];
@@ -34,9 +109,11 @@ export class OrdersService {
           });
 
           if (!productData) {
-            throw new NotFoundException(
-              `Product with ID ${cartItem.productId} not found`,
-            );
+            return {
+              success: false,
+              statusCode: 400,
+              message: `Product with ID ${cartItem.productId} not found`,
+            };
           }
 
           const totalAmount = productData.price.toNumber() * cartItem.quantity;
@@ -47,7 +124,7 @@ export class OrdersService {
               productId: cartItem.productId,
               totalAmount,
               userId: cartItem.user.id,
-            },
+            },  
           });
 
           await prisma.product.update({
@@ -63,11 +140,12 @@ export class OrdersService {
         }
 
         await prisma.cart.deleteMany({
-          where: { userId: id },
+          where: { userId: user.id },
         });
 
         return {
-          statusCode: 200,
+          success: true,
+          statusCode: 201,
           message: 'Orders created successfully',
           data: orders,
         };
@@ -94,6 +172,7 @@ export class OrdersService {
       ]);
 
       return {
+        success: true,
         statusCode: 200,
         message: 'Fetched order data successfully',
         currentPage: page,
@@ -107,17 +186,33 @@ export class OrdersService {
     }
   }
 
-  async findOne(orderId: number, userId: number) {
+  async findOne(orderId: number, userEmail: string) {
     try {
+      const user = await this.prismaService.user.findUnique({
+        where: { email: userEmail },
+      });
       const order = await this.prismaService.order.findFirst({
-        where: { id: orderId, userId },
+        where: { id: orderId, userId: user.id },
       });
 
       if (!order) {
-        throw new NotFoundException('Order not found');
+        return {
+          success: false,
+          statusCode: 400,
+          message: 'Order not found',
+        };
+      }
+
+      if (!user) {
+        return {
+          success: false,
+          statusCode: 400,
+          message: 'User not found',
+        };
       }
 
       return {
+        success: true,
         statusCode: 200,
         message: 'Fetched order successfully',
         data: order,
@@ -128,34 +223,65 @@ export class OrdersService {
     }
   }
 
-  async cancelOrder(orderId: number, userId: number) {
-    const order = await this.prismaService.order.findUnique({
-      where: { id: orderId },
-    });
+  async cancelOrder(orderId: number, userEmail: string) {
+    try {
+      const user = await this.prismaService.user.findUnique({
+        where: { email: userEmail },
+      });
 
-    if (!order) {
-      throw new NotFoundException();
-    }
+      const order = await this.prismaService.order.findUnique({
+        where: { id: orderId },
+      });
 
-    if (order.userId !== userId) {
-      throw new ForbiddenException('You are not allowed to cancel this order');
-    }
+      if (!order) {
+        return {
+          success: false,
+          statusCode: 400,
+          message: 'Order not found',
+        };
+      }
 
-    if (order.status === 'SHIPPED') {
-      throw new BadRequestException(
-        'Cannot cancel an order that has already been shipped',
+      if (!user) {
+        return {
+          success: false,
+          statusCode: 400,
+          message: 'User not found',
+        };
+      }
+
+      if (order.userId !== user.id) {
+        return {
+          success: false,
+          statusCode: 400,
+          message: 'You are not allowed to cancel this order',
+        };
+      }
+
+      if (order.status === 'SHIPPED') {
+        return {
+          success: false,
+          statusCode: 403,
+          message: 'Cannot cancel an order that has already been shipped',
+        };
+      }
+
+      const canceledOrder = await this.prismaService.order.update({
+        where: { id: orderId },
+        data: { status: 'CANCELLED' },
+      });
+
+      return {
+        success: true,
+        statusCode: 200,
+        message: 'Order cancelled successfully',
+        data: canceledOrder,
+      };
+    } catch (error) {
+      console.error(
+        `Failed to cancel order ${orderId} for user ${userEmail}`,
+        error,
       );
+      throw new InternalServerErrorException();
     }
-
-    const canceledOrder = await this.prismaService.order.update({
-      where: { id: orderId },
-      data: { status: 'CANCELLED' },
-    });
-
-    return {
-      statusCode: 200,
-      message: 'Order cancelled successfully',
-      data: canceledOrder,
-    };
   }
 }

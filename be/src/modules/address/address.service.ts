@@ -9,7 +9,7 @@ import { PrismaService } from 'src/database/prisma/prisma.service';
 
 @Injectable()
 export class AddressService {
-  constructor(private readonly prismaService: PrismaService) { }
+  constructor(private readonly prismaService: PrismaService) {}
   async create(createAddressDto: CreateAddressDto, userId: number) {
     const { houseNumber, street, ward, city, district, country, isPrimary } =
       createAddressDto;
@@ -25,8 +25,8 @@ export class AddressService {
           return {
             statusCode: 400,
             success: false,
-            message: 'You already have a primary address.'
-          }
+            message: 'You already have a primary address.',
+          };
         }
       }
 
@@ -73,7 +73,14 @@ export class AddressService {
     }
   }
 
-  async update(id: number, updateAddressDto: UpdateAddressDto) {
+  async update(
+    userEmail: string,
+    updateAddressDto: UpdateAddressDto,
+  ) {
+    const user = await this.prismaService.user.findUnique({
+      where: { email: userEmail },
+    });
+
     const { houseNumber, street, ward, city, district, country, isPrimary } =
       updateAddressDto;
 
@@ -81,7 +88,7 @@ export class AddressService {
       if (isPrimary) {
         const existingPrimaryAddress =
           await this.prismaService.address.findFirst({
-            where: { userId: id, isPrimary: true },
+            where: { userId: user.id, isPrimary: true },
           });
 
         if (existingPrimaryAddress) {
@@ -90,7 +97,7 @@ export class AddressService {
       }
 
       const updatedAddress = await this.prismaService.address.update({
-        where: { id: id },
+        where: { id: user.id },
         data: {
           houseNumber,
           street,

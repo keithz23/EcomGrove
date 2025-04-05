@@ -20,8 +20,13 @@ export class OrdersController {
   @Post()
   async create(@Req() req: Request, @Res() res: Response) {
     try {
-      const id = (req.user as any).id;
-      const response = await this.ordersService.create(id);
+      const userEmail = (req.user as any).email;
+      const response = await this.ordersService.create(userEmail);
+
+      if (!response.success) {
+        return res.status(400).json(response.message);
+      }
+
       return res.status(200).json(response);
     } catch (error) {
       console.error('Error creating order:', error);
@@ -32,11 +37,16 @@ export class OrdersController {
   }
 
   @UseGuards(JwtOrderGuard)
-  @Get('fetch-all')
+  @Get('')
   async findAll(@Req() req: Request, @Res() res: Response) {
     try {
       const userEmail = (req.user as any).email;
       const response = await this.ordersService.findAll(userEmail);
+
+      if (!response.success) {
+        return res.status(400).json(response.message);
+      }
+
       return res.status(200).json(response);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -54,8 +64,13 @@ export class OrdersController {
     @Res() res: Response,
   ) {
     try {
-      const userId = (req.user as any).id;
-      const response = await this.ordersService.findOne(+id, userId);
+      const userEmail = (req.user as any).email;
+      const response = await this.ordersService.findOne(+id, userEmail);
+
+      if (!response.success) {
+        return res.status(400).json(response.message);
+      }
+
       return res.status(200).json(response);
     } catch (error) {
       console.error('Error fetching order:', error);
@@ -73,8 +88,13 @@ export class OrdersController {
     @Res() res: Response,
   ) {
     try {
-      const userId = (req.user as any).id;
-      const response = await this.ordersService.cancelOrder(+id, userId);
+      const userEmail = (req.user as any).email;
+      const response = await this.ordersService.cancelOrder(+id, userEmail);
+
+      if (!response.success) {
+        return res.status(400).json(response.message);
+      }
+
       return res.status(200).json(response);
     } catch (error) {
       console.error('Error cancelling order:', error);

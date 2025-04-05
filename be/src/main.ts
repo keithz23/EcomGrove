@@ -28,7 +28,7 @@ async function bootstrap() {
     origin: configService.get<string>('CORS_ORIGIN') || '*',
     methods: 'GET, POST, PUT, DELETE',
     allowedHeaders: 'Content-Type, Accept, Authorization',
-    credentials: true
+    credentials: true,
   });
   SwaggerModule.setup('api', app, document);
 
@@ -39,7 +39,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  app.useGlobalFilters(new HttpExceptionFilter())
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   app.use(
     rateLimit({
@@ -47,8 +47,7 @@ async function bootstrap() {
       max: 100,
     }),
   );
-  const port=configService.get<number>('PORT') || 3000
+  const port = configService.get<number>('PORT') || 3000;
   await app.listen(port, '0.0.0.0');
-  console.log(`Application is running on port ${port}`);
 }
 bootstrap();

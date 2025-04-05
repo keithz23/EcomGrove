@@ -31,7 +31,7 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @UseGuards(JwtProductGuard)
-  @Post('add-product')
+  @Post('')
   @ApiOperation({ summary: 'Upload a product with multiple images' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({

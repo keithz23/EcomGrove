@@ -58,7 +58,7 @@ export default function CartDetails() {
             >
               <div className="flex gap-6 items-center">
                 {/* Product Image */}
-                  <div className="h-32 w-32 flex-shrink-0 border border-gray-300 rounded-lg overflow-hidden">
+                <div className="h-32 w-32 flex-shrink-0 border border-gray-300 rounded-lg overflow-hidden">
                   <img
                     src={item.product.imagePath[0]?.url}
                     alt={item.product.name}
@@ -103,7 +103,7 @@ export default function CartDetails() {
                         }
                         value={
                           quantities[String(item.cart.id)] ?? item.cart.quantity
-                        } // Fallback to cart quantity
+                        }
                         type="number"
                         min="1"
                         max="50"
@@ -178,7 +178,7 @@ export default function CartDetails() {
               </span>
             </div>
             <button className="mt-5 w-full">
-              <Checkout/>
+              <Checkout />
             </button>
           </div>
         </div>
