@@ -1,4 +1,3 @@
-import { product, productCategory } from "../interfaces/product";
 import img_1 from "../assets/images/1.jpg";
 import img_2 from "../assets/images/2.jpg";
 import img_3 from "../assets/images/3.jpg";
@@ -10,7 +9,7 @@ import img_6 from "../assets/images/6.jpg";
 const DEFAULT_DESC = "Ocean";
 const DEFAULT_PRICE = "33.45";
 
-export const ProductItems: product[] = [
+export const ProductItems = [
   {
     id: 1,
     name: "Ocean",
@@ -56,7 +55,7 @@ export const ProductItems: product[] = [
 ];
 
 // Product Category Items
-export const ProductCategoryItems: productCategory[] = [
+export const ProductCategoryItems = [
   { name: "Ocean & Sea" },
   { name: "Mountain & Highland" },
   { name: "Forest & Nature" },

@@ -1,5 +1,5 @@
 import { Toaster } from "react-hot-toast";
-import bg from '../../assets/bg.jpg'
+import bg from "../../assets/bg.jpg";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useAuthStore } from "../../store/useAuthStore";
@@ -38,7 +38,7 @@ export default function Login() {
   return (
     <>
       {/* Back to Home button */}
-      <BackToHome textColor="text-white" />
+      <BackToHome textColor="text-white" backTo="" />
 
       <div
         className="relative min-h-screen bg-cover bg-center flex flex-col justify-center items-center w-full"

@@ -5,7 +5,7 @@ export const labelToKeyMap: Record<string, keyof personal | keyof address> = {
   "Last name": "lastName",
   Email: "email",
   Username: "username",
-  "Phone number": "phone",
+  "Phone number": "phoneNumber",
   "House number": "houseNumber",
   Street: "street",
   Ward: "ward",
