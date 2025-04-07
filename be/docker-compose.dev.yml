@@ -23,7 +23,7 @@ services:
     env_file:
       - .env.development
     environment:
-      - MYSQL_ROOT_PASSWORD=keith@0309
+      - MYSQL_ROOT_PASSWORD=keith0309
       - MYSQL_DATABASE=ecommerce_project
     networks:
       - dev-net

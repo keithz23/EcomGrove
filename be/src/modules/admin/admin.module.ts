@@ -4,9 +4,11 @@ import { AdminController } from './admin.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from 'src/database/prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
+    UsersModule,
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     JwtModule.registerAsync({

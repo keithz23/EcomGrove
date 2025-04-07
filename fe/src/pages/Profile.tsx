@@ -184,7 +184,7 @@ export default function Profile() {
   return (
     <>
       {/* Back to Home button */}
-      <BackToHome textColor="text-black" />
+      <BackToHome textColor="text-black" backTo=""/>
 
       {/* Modal upload */}
       <ModalUpload

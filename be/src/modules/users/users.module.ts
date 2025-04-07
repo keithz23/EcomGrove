@@ -25,5 +25,6 @@ import { MailService } from 'src/utils';
   ],
   controllers: [UsersController],
   providers: [UsersService, PrismaService, JwtStrategy, MailService],
+  exports: [UsersService],
 })
-export class UsersModule { }
+export class UsersModule {}

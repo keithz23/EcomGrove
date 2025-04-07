@@ -1,7 +1,8 @@
 import { Minus, Plus, Trash } from "lucide-react";
 import { useState, useEffect } from "react";
 import useCartData from "../../hooks/useCartData";
-import Checkout from "../../components/shop/Checkout";
+import { Link } from "react-router-dom";
+import BackToHome from "../../components/common/BackToHome";
 
 export default function CartDetails() {
   const { cart } = useCartData();
@@ -43,7 +44,8 @@ export default function CartDetails() {
   };
 
   return (
-    <div className="py-8 px-10 max-w-7xl mx-auto">
+    <div className="p-10 max-w-7xl mx-auto">
+      <BackToHome textColor="text-black" backTo="" />
       <h1 className="text-gray-900 font-bold text-3xl mb-6">Shopping Cart</h1>
       <hr className="border-gray-300" />
 
@@ -177,9 +179,11 @@ export default function CartDetails() {
                 USD
               </span>
             </div>
-            <button className="mt-5 w-full">
-              <Checkout />
-            </button>
+            <Link to={"/checkout"}>
+              <button className="mt-5 w-full p-3 border-1 border-indigo-500 rounded-lg text-indigo-500 hover:bg-indigo-500 hover:text-white hover:cursor-pointer transition-all duration-300">
+                Checkout
+              </button>
+            </Link>
           </div>
         </div>
       </div>

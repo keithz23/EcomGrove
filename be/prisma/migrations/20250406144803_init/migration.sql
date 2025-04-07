@@ -14,6 +14,7 @@ CREATE TABLE `User` (
     `phoneNumber` VARCHAR(191) NULL,
     `profile_picture` VARCHAR(191) NULL,
     `googleId` VARCHAR(191) NULL,
+    `isDeleted` BOOLEAN NULL DEFAULT false,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -90,14 +91,8 @@ CREATE TABLE `Cart` (
 CREATE TABLE `Order` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `quantity` INTEGER NOT NULL,
-    `amount` JSON NOT NULL,
-    `payer` JSON NOT NULL,
-    `method` VARCHAR(191) NOT NULL,
-    `address` JSON NULL,
+    `totalAmount` DECIMAL(10, 2) NOT NULL,
     `status` VARCHAR(191) NOT NULL DEFAULT 'pending',
-    `transactionId` VARCHAR(191) NULL,
-    `captureId` VARCHAR(191) NULL,
-    `rawResponse` JSON NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `userId` INTEGER NOT NULL,

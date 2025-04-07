@@ -25,7 +25,7 @@ import { S3Utils } from 'src/utils/s3.util';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @UseGuards(JwtAdminGuard)
   @Post('create-user')
@@ -79,7 +79,6 @@ export class UsersController {
     }
   }
 
-
   @UseGuards(JwtUserGuard)
   @Post('send-otp-code')
   async sendOtpCode(@Req() req: Request, @Res() res: Response) {
@@ -106,7 +105,7 @@ export class UsersController {
   async uploadAvatar(
     @Body() uploadAvatarDto: UploadAvatarDto,
     @UploadedFiles() files: { imagePath?: Express.Multer.File[] },
-    @Req() req: Request
+    @Req() req: Request,
   ) {
     if (!files || !files.imagePath || files.imagePath.length === 0) {
       throw new BadRequestException('Image file is required');
@@ -119,10 +118,5 @@ export class UsersController {
     const response = await this.usersService.uploadAvatar(upload.url, email);
 
     return response;
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
   }
 }

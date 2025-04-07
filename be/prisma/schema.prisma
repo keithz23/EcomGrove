@@ -25,7 +25,7 @@ model User {
   profile_picture String?
   googleId        String?
 
-  isDeleted Boolean?
+  isDeleted Boolean? @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

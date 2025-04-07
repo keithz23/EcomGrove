@@ -8,27 +8,27 @@ import {
 } from 'class-validator';
 
 export class CreateUserDto {
-  @ApiProperty()
+  @ApiProperty({ default: 'Lunez' })
   @IsNotEmpty({ message: 'First name is requried' })
   @IsString({ message: 'First name must be a string' })
   firstName: string;
 
-  @ApiProperty()
+  @ApiProperty({ default: 'Chan' })
   @IsNotEmpty({ message: 'Last name is required' })
   @IsString({ message: 'Last name must be a string' })
   lastName: string;
 
-  @ApiProperty()
+  @ApiProperty({ default: 'lunezchan@gmail.com' })
   @IsNotEmpty({ message: 'Email is required' })
   @IsEmail()
   email: string;
 
-  @ApiProperty()
+  @ApiProperty({ default: 'chanz' })
   @IsNotEmpty({ message: 'Username is required' })
   @IsString({ message: 'Username must be a string' })
   username: string;
 
-  @ApiProperty()
+  @ApiProperty({ default: 'Lunezchan@123' })
   @IsNotEmpty({ message: 'Password is required' })
   @IsString({ message: 'Password must be a string' })
   @MinLength(8, {
@@ -40,7 +40,7 @@ export class CreateUserDto {
   })
   password: string;
 
-  @ApiProperty()
+  @ApiProperty({ default: '0907462118' })
   @IsNotEmpty({ message: 'Phone number is required' })
   phoneNumber: string;
 }

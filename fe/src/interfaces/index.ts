@@ -10,3 +10,4 @@ export * from "./about";
 export * from './profile'
 export * from './modal'
 export * from './auth'
+export * from './checkout'
