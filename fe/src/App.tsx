@@ -12,7 +12,7 @@ import CartDetails from "./pages/cart/CartDetails";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Checkout from "./components/shop/Checkout";
+import Checkout from "./pages/shop/Checkout";
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);

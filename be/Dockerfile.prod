@@ -1,27 +1,38 @@
 # Stage 1: Build
 FROM node:18-alpine AS builder
 
+# Set working directory
 WORKDIR /app
 
+# Install only production dependencies
 COPY package*.json ./
 RUN npm install --only=production
 
-
+# Copy the rest of the application files
 COPY . .
 COPY prisma ./prisma
 
+# Generate Prisma client and build app
 RUN npx prisma generate
 RUN npm run build
 
-# Stage 2: Run
+# Stage 2: Runtime container
 FROM node:18-alpine
 
 WORKDIR /app
 
+# Copy only what's needed to run
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
 
+# Copy and prepare entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Expose app port
 EXPOSE 9000
 
-CMD ["npm", "run", "start"]
+# Use entrypoint script to run the app
+ENTRYPOINT ["/entrypoint.sh"]

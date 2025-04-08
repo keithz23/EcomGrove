@@ -15,6 +15,7 @@ RUN npx prisma generate
 COPY . .
 
 # Ensure the entrypoint script is executable
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
 # Expose the application port

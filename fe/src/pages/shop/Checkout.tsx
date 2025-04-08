@@ -6,7 +6,7 @@ import { DeliveryItems, PaymentItems } from "../../utils/checkout";
 import { Minus, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import useCartData from "../../hooks/useCartData";
-import BackToHome from "../common/BackToHome";
+import BackToHome from "../../components/common/BackToHome";
 
 export default function Checkout() {
   const { cart } = useCartData();

@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile.prod
     container_name: container-prod
-    env_file: .env.production
+    env_file: .env
     ports:
       - 9001:9000 
     networks:
@@ -22,7 +22,7 @@ services:
     image: mysql:latest
     container_name: container-mysql-prod
     env_file:
-      - .env.production
+      - .env
     environment:
       - MYSQL_ROOT_PASSWORD=${DATABASE_PASSWORD}
       - MYSQL_DATABASE=${DATABASE_URL}

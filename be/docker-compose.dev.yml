@@ -5,9 +5,9 @@ services:
       dockerfile: Dockerfile.dev
     container_name: container-dev
     env_file: 
-      - .env.development
+      - .env
     ports:
-      - 9001:9000
+      - 9000:9000
     volumes:
       - .:/app
       - /app/node_modules
@@ -21,16 +21,16 @@ services:
     image: mysql:latest
     container_name: container-mysql-dev
     env_file:
-      - .env.development
+      - .env
     environment:
-      - MYSQL_ROOT_PASSWORD=keith0309
-      - MYSQL_DATABASE=ecommerce_project
-    networks:
-      - dev-net
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
     ports:
-      - 3307:3306
+      - "${MYSQL_PORT}:3306"
     volumes:
       - dev_mysql_data:/var/lib/mysql
+    networks:
+      - dev-net
     restart: always
 
   redis:

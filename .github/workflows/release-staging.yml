@@ -31,12 +31,6 @@ jobs:
           docker-compose -f docker-compose.dev.yml build
           docker-compose -f docker-compose.dev.yml push
 
-      # Build and push Docker images for prod environment
-      - name: Build and push Docker images (prod)
-        run: |
-          docker-compose -f docker-compose.prod.yml build
-          docker-compose -f docker-compose.prod.yml push
-
       # Deploy to the dev server
       - name: Deploy to dev server
         env:
@@ -46,16 +40,6 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh -o StrictHostKeyChecking=no user@demo 'docker-compose -f /path/to/docker-compose.dev.yml pull && docker-compose -f /path/to/docker-compose.dev.yml up -d'
-
-      # Deploy to the prod server
-      - name: Deploy to prod server
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh -o StrictHostKeyChecking=no user@demo 'docker-compose -f /path/to/docker-compose.prod.yml pull && docker-compose -f /path/to/docker-compose.prod.yml up -d'
 
       # Optional: Clean up unused Docker images
       - name: Clean up unused Docker images
