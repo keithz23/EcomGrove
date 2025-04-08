@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './modules/auth/auth.module';
 import { MailerModule } from '@nestjs-modules/mailer';
@@ -75,7 +73,6 @@ import { RedisCacheModule } from './modules/cache/cache.module';
     AdminModule,
     RedisCacheModule,
   ],
-  controllers: [AppController],
-  providers: [AppService, ConfigService],
+  providers: [ConfigService],
 })
 export class AppModule {}
