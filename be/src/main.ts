@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import * as cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/filters/HttpExceptionFilter';
+import rateLimit from 'express-rate-limit';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -40,12 +41,12 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // app.use(
-  //   rateLimit({
-  //     windowMs: 15 * 60 * 1000,
-  //     max: 100,
-  //   }),
-  // );
+  app.use(
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 100,
+    }),
+  );
   const port = configService.get<number>('PORT') || 3000;
   await app.listen(port, '0.0.0.0');
 }
