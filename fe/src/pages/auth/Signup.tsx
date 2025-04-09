@@ -6,7 +6,7 @@ import { useAuthStore } from "../../store/useAuthStore";
 import Loading from "../../components/common/Loading";
 import { EURI } from "../../enums/EURI";
 import { ETypes } from "../../enums/ETypes";
-import Header from "../../components/common/Header";
+import {Header} from "../../components/common/Header";
 
 type FormValues = {
   firstName: string;

@@ -1,4 +1,3 @@
-import Header from "../components/common/Header";
 import Banner from "../components/common/Banner";
 import Product from "../components/product/Product";
 import Footer from "../components/common/Footer";
@@ -8,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import Modal from "../components/common/Modal";
 import { cartService } from "../services";
+import { Header } from "../components/common/Header";
 
 export default function Home() {
   const { isAuthenticated } = useAuthStore();

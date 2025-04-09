@@ -1,5 +1,5 @@
 import Footer from "../components/common/Footer";
-import Header from "../components/common/Header";
+import {Header} from "../components/common/Header";
 import { ETypes } from "../enums/ETypes";
 import { EURI } from "../enums/EURI";
 import { ourMission, ourStory } from "../utils";

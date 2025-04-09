@@ -1,15 +1,14 @@
 import { EURI } from "../../enums/EURI";
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/blur.css";
-import { FirstBannerItems, SecondBannerItems } from "../../utils";
+import { categories } from "../../utils";
 
 export default function Banner() {
   return (
     <>
-      {/* Video Banner */}
-      <section className="relative w-full h-[100vh]">
+      {/* Full-Screen Video Banner */}
+      <section className="relative w-full h-screen flex items-center justify-center overflow-hidden">
         <video
-          className="w-full h-full object-cover"
+          className="absolute w-full h-full object-cover opacity-80"
           autoPlay
           loop
           muted
@@ -18,73 +17,40 @@ export default function Banner() {
           controls={false}
         >
           <source src={`${EURI.MEDIA_URI}/banner.mp4`} type="video/mp4" />
+          Your browser does not support the video tag.
         </video>
-      </section>
 
-      <section className="mt-5 px-5">
-        {/* First Banner */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {FirstBannerItems.map((item) => (
-            <a href={item.href} key={item.name}>
-              <div className="relative border border-gray-300 overflow-hidden group hover:cursor-pointer shadow-sm h-[35rem] transition-colors duration-200 ">
-                <LazyLoadImage
-                  src={item.image_path}
-                  alt={item.name}
-                  className="w-full min-h-[35rem] object-cover"
-                  width="100%"
-                  height="560px"
-                  effect="opacity"
-                  threshold={50}
-                  delayTime={100}
-                />
-                <div className="absolute inset-0 bg-stone-400 opacity-0 group-hover:opacity-50 transition-opacity"></div>
-                <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
-                  <div>
-                    <h2 className="text-lg font-bold text-white">
-                      {item.name}
-                    </h2>
-                    <p className="text-sm text-gray-500">{item.desc}</p>
-                  </div>
-                  <button className="w-fit relative text-white opacity-0 before:absolute before:left-1/2 before:bottom-0 before:h-[2px] before:w-0 before:bg-white before:transition-all before:duration-300 group-hover:before:w-full group-hover:before:left-0 group-hover:opacity-100">
-                    SHOP NOW
-                  </button>
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-60"></div>
+
+        {/* Category Carousel */}
+        <div className="relative z-10 w-full max-w-6xl px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+            Discover Our Categories
+          </h2>
+          <div className="flex flex-wrap justify-center gap-6 md:gap-8">
+            {categories.map((category: any) => (
+              <div key={category.name} className="relative group w-40 md:w-48">
+                {/* Category Button */}
+                <div className="relative bg-white bg-opacity-10 backdrop-blur-md rounded-full p-4 text-center text-black font-medium uppercase tracking-wide transition-all duration-300 group-hover:bg-opacity-20 group-hover:scale-105">
+                  {category.name}
+                </div>
+
+                {/* Dropdown Menu */}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 hidden group-hover:flex flex-col bg-white bg-opacity-95 rounded-lg shadow-lg w-52 z-50 py-2 text-black">
+                  {category.products.map((product: any) => (
+                    <a
+                      key={product.id}
+                      href={`/product/${product.id}`}
+                      className="px-4 py-2 text-sm text-gray-800 hover:bg-indigo-50 hover:text-indigo-600 transition-all duration-200"
+                    >
+                      {product.name}
+                    </a>
+                  ))}
                 </div>
               </div>
-            </a>
-          ))}
-        </div>
-
-        {/* Second Banner */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-5">
-          {SecondBannerItems.map((item) => (
-            <a href={item.href} key={item.name}>
-              <div className="relative border border-gray-300 overflow-hidden group hover:cursor-pointer shadow-sm h-[25rem] transition-colors duration-200">
-                <LazyLoadImage
-                  src={item.image_path}
-                  alt={item.name}
-                  className="w-full min-h-[35rem] object-cover"
-                  visibleByDefault={false}
-                  effect="opacity"
-                  width="100%"
-                  height="560px"
-                  threshold={200}
-                  delayTime={100}
-                />
-                <div className="absolute inset-0 bg-stone-400 opacity-0 group-hover:opacity-50 transition-opacity"></div>
-                <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
-                  <div>
-                    <h2 className="text-lg font-bold text-white">
-                      {item.name}
-                    </h2>
-                    <p className="text-sm text-gray-500">{item.desc}</p>
-                  </div>
-                  <button className="w-fit relative text-white opacity-0 before:absolute before:left-1/2 before:bottom-0 before:h-[2px] before:w-0 before:bg-white before:transition-all before:duration-300 group-hover:before:w-full group-hover:before:left-0 group-hover:opacity-100">
-                    SHOP NOW
-                  </button>
-                </div>
-              </div>
-            </a>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
     </>
