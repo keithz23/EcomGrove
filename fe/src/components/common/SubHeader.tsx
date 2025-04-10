@@ -10,10 +10,12 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useRef, useState } from "react";
+import { useCategoryData } from "../../hooks/useCategoryData";
 
 export default function SubHeader() {
   const [isActive, setIsActive] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { categoriesData } = useCategoryData();
   const [openDropdown, setOpenDropDown] = useState<string | null>(null);
 
   const searchRef = useRef<HTMLDivElement>(null);
@@ -47,14 +49,16 @@ export default function SubHeader() {
             {/* Desktop Nav */}
             <div className="hidden lg:flex ml-3">
               <ul className="flex gap-4 text-sm text-gray-700">
-                <li className="hover:text-[#0989ff] cursor-pointer">Home</li>
-                <li className="hover:text-[#0989ff] cursor-pointer">Shop</li>
-                <li className="hover:text-[#0989ff] cursor-pointer">
-                  Products
-                </li>
-                <li className="hover:text-[#0989ff] cursor-pointer">Contact</li>
-                <li className="hover:text-[#0989ff] cursor-pointer">Coupons</li>
-                <li className="hover:text-[#0989ff] cursor-pointer">Blog</li>
+                {["Home", "Shop", "Products", "Blog", "Coupons", "Contact"].map(
+                  (item) => (
+                    <li
+                      key={item}
+                      className="hover:text-[#0989ff] cursor-pointer flex gap-2 items-center"
+                    >
+                      {item}
+                    </li>
+                  )
+                )}
               </ul>
             </div>
           </div>
@@ -157,29 +161,24 @@ export default function SubHeader() {
               </button>
 
               {openDropdown === "category" && (
-                <div className="w-full bg-white  rounded-md mt-2">
+                <div className="w-full bg-white rounded-md mt-2 overflow-auto max-h-80">
                   <ul className="p-4 space-y-3">
-                    {[
-                      "Headphones",
-                      "Smartphones",
-                      "Laptops",
-                      "Accessories",
-                    ].map((category) => (
+                    {categoriesData.map((category) => (
                       <li
-                        key={category}
+                        key={category.id}
                         className="p-2 rounded-md cursor-pointer transition border-b border-gray-300 mb-3"
                       >
                         <div className="flex items-center justify-between gap-x-4 group">
                           <div className="flex items-center gap-x-4">
-                            <img
-                              src="https://i.ibb.co/sVxYFDY/product-cat-1.png"
-                              alt={category}
-                              className="w-12 h-12 object-contain"
-                            />
+                            <div className="w-12 h-12 rounded-md bg-blue-100 text-blue-700 font-bold flex items-center justify-center">
+                              {category.name.slice(0, 3).toUpperCase()}
+                            </div>
+
                             <span className="text-sm font-medium text-gray-800 transition-all duration-200">
-                              {category}
+                              {category.name}
                             </span>
                           </div>
+
                           <ChevronRight className="h-5 w-5 text-gray-500 border border-gray-300" />
                         </div>
                       </li>

@@ -45,23 +45,16 @@ export class CategoriesService {
     }
   }
 
-  async findAll(page: number = 1, limit: number = 10) {
+  async findAll() {
     try {
-      const skip = (page - 1) * limit;
-      const [categoriesData, total] = await Promise.all([
-        this.prismaService.categories.findMany({
-          where: { isDeleted: false },
-          skip,
-          take: limit,
-        }),
-        this.prismaService.categories.count({ where: { isDeleted: false } }),
-      ]);
+      const categoriesData = await this.prismaService.categories.findMany({
+        where: { isDeleted: false },
+      });
+
       return {
+        success: true,
         statusCode: 200,
         message: 'Fetched all categories successfully',
-        currentPage: page,
-        totalPages: Math.ceil(total / limit),
-        totalItems: total,
         data: categoriesData,
       };
     } catch (error) {

@@ -14,6 +14,7 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { Link, useNavigate } from "react-router-dom";
 import SubHeader from "./SubHeader";
 import { useWindowEvents } from "../../hooks/useWindowsEvent";
+import { useCategoryData } from "../../hooks/useCategoryData";
 
 interface HeaderColor {
   color?: string;
@@ -23,6 +24,7 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
   const [openDropdown, setOpenDropDown] = useState<string | null>(null);
   const { isAuthenticated, logout, user } = useAuthStore();
   const { isScrolled, isMobile } = useWindowEvents();
+  const { categoriesData } = useCategoryData();
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -144,13 +146,16 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
             </div>
 
             {/* Search */}
-            <div className="hidden lg:flex col-span-1 border-2 border-[#0989ff] h-12">
+            <div className="hidden lg:flex col-span-1 border-2 border-[#0989ff] h-12 relative z-50">
+              {/* Search Input */}
               <input
                 type="text"
                 className="flex-1 px-4 focus:outline-none"
                 placeholder="Search for Products..."
               />
-              <div className="relative flex items-center px-4 border-l z-30">
+
+              {/* Button + Dropdown trigger */}
+              <div className="flex items-center px-4 border-l">
                 <button
                   aria-expanded={openDropdown === "select category"}
                   aria-controls="category-dropdown"
@@ -165,31 +170,29 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
                     size={16}
                   />
                 </button>
+              </div>
+
+              {/* Dropdown (Absolutely positioned within relative parent) */}
+              {openDropdown === "select category" && (
                 <div
                   id="category-dropdown"
-                  className={`absolute left-0 top-full bg-white shadow-md mt-2 w-48 text-sm p-3 rounded transition-all duration-200 z-50 ${
-                    openDropdown === "select category"
-                      ? "opacity-100 translate-y-0"
-                      : "opacity-0 -translate-y-2 pointer-events-none"
-                  }`}
+                  className="absolute right-0 top-full mt-2 w-48 bg-white shadow-md max-h-36 overflow-auto text-sm p-3 rounded z-[9999] transition-all duration-200"
                 >
                   <ul className="space-y-2">
                     <li className="font-semibold text-gray-600">
                       Select Category
                     </li>
-                    {["Electronics", "Fashion", "Beauty", "Jewelry"].map(
-                      (cat) => (
-                        <li
-                          key={cat}
-                          className="hover:cursor-pointer hover:text-[#0989ff]"
-                        >
-                          {cat}
-                        </li>
-                      )
-                    )}
+                    {categoriesData.map((cat) => (
+                      <li
+                        key={cat.id}
+                        className="hover:cursor-pointer hover:text-[#0989ff]"
+                      >
+                        {cat.name}
+                      </li>
+                    ))}
                   </ul>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Icons */}
@@ -241,35 +244,31 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
             {/* Category Dropdown */}
             <div
               id="all-category-dropdown"
-              className={`absolute bg-white top-full z-50 min-w-[334px] left-0 border border-gray-200 shadow-lg transition-all duration-500 ${
+              className={`absolute bg-white top-full z-50 min-w-[334px] left-0 border border-gray-200 shadow-lg transition-all duration-500 max-h-52 overflow-auto ${
                 openDropdown === "all category"
                   ? "opacity-100 visible"
                   : "opacity-0 invisible"
               }`}
             >
               <ul className="p-4 space-y-3">
-                {["Headphones", "Smartphones", "Laptops", "Accessories"].map(
-                  (category) => (
-                    <li
-                      key={category}
-                      className="p-2 rounded-md cursor-pointer transition"
-                    >
-                      <div className="flex items-center justify-between gap-x-4 group">
-                        <div className="flex items-center gap-x-4">
-                          <img
-                            src="https://i.ibb.co/sVxYFDY/product-cat-1.png"
-                            alt={category}
-                            className="w-12 h-12 object-contain"
-                          />
-                          <span className="text-sm font-medium text-gray-800 group-hover:text-[#0989ff] transition-all duration-200">
-                            {category}
-                          </span>
+                {categoriesData.map((category) => (
+                  <li
+                    key={category.id}
+                    className="p-2 rounded-md cursor-pointer transition"
+                  >
+                    <div className="flex items-center justify-between gap-x-4 group">
+                      <div className="flex items-center gap-x-4">
+                        <div className="w-10 h-10 rounded-md bg-blue-100 text-blue-700 font-bold flex items-center justify-center">
+                          {category.name.slice(0, 3).toUpperCase()}
                         </div>
-                        <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-[#0989ff] transition-all duration-200" />
+                        <span className="text-sm font-medium text-gray-800 group-hover:text-[#0989ff] transition-all duration-200">
+                          {category.name}
+                        </span>
                       </div>
-                    </li>
-                  )
-                )}
+                      <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-[#0989ff] transition-all duration-200" />
+                    </div>
+                  </li>
+                ))}
               </ul>
             </div>
 

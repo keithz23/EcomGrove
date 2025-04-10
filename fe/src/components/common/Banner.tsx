@@ -8,9 +8,7 @@ export default function Banner() {
   const imageUrls = [img_1, img_2, img_3];
   return (
     <>
-      <div className="p-4">
-        <Carousel images={imageUrls} />
-      </div>
+      <Carousel images={imageUrls} />
     </>
   );
 }
