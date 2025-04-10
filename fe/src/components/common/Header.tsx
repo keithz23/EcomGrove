@@ -9,54 +9,26 @@ import {
   PhoneCall,
   AlignLeft,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { Link, useNavigate } from "react-router-dom";
 import SubHeader from "./SubHeader";
+import { useWindowEvents } from "../../hooks/useWindowsEvent";
 
 interface HeaderColor {
   color?: string;
 }
 
 export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
-  const [languageClicked, setLanguageClicked] = useState(false);
-  const [settingClicked, setSettingClicked] = useState(false);
-  const [selectCategoryClicked, setSelectCategoryClicked] = useState(false);
-  const [allCategoryClicked, setAllCategoriesClicked] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [openDropdown, setOpenDropDown] = useState<string | null>(null);
   const { isAuthenticated, logout, user } = useAuthStore();
+  const { isScrolled, isMobile } = useWindowEvents();
   const navigate = useNavigate();
-
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0);
-      setAllCategoriesClicked(false);
-      setLanguageClicked(false);
-      setSelectCategoryClicked(false);
-      setSettingClicked(false);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
-        setLanguageClicked(false);
-        setSettingClicked(false);
-        setSelectCategoryClicked(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const toggleDropdown = (dropdownKey: string) => {
+    setOpenDropDown((prev) => (prev === dropdownKey ? null : dropdownKey));
+  };
 
   const handleLogout = () => {
     logout();
@@ -72,17 +44,19 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
             {/* Language Selector */}
             <div className="relative">
               <button
+                aria-expanded={openDropdown === "language"}
+                aria-controls="language-dropdown"
                 className="flex items-center cursor-pointer bg-transparent text-white focus:outline-none"
                 onClick={() => {
-                  setLanguageClicked((prev) => !prev);
-                  setSettingClicked(false);
+                  toggleDropdown("language");
                 }}
               >
                 English <ChevronDown className="ml-1" size={16} />
               </button>
               <ul
+                id="language-dropdown"
                 className={`absolute bg-white text-black shadow-lg mt-2 z-30 text-sm rounded transition-all duration-200 ${
-                  languageClicked
+                  openDropdown === "language"
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-2 pointer-events-none"
                 }`}
@@ -103,17 +77,19 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
             {/* Settings */}
             <div className="relative">
               <button
+                aria-expanded={openDropdown === "setting"}
+                aria-controls="setting-dropdown"
                 className="flex items-center cursor-pointer text-white focus:outline-none"
                 onClick={() => {
-                  setSettingClicked((prev) => !prev);
-                  setLanguageClicked(false);
+                  toggleDropdown("setting");
                 }}
               >
                 Settings <ChevronDown className="ml-1" size={16} />
               </button>
               <ul
+                id="setting-dropdown"
                 className={`absolute bg-white text-black shadow-lg mt-2 min-w-max text-sm rounded transition-all duration-200 z-10 ${
-                  settingClicked
+                  openDropdown === "setting"
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-2 pointer-events-none"
                 }`}
@@ -149,12 +125,12 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
       </div>
 
       {/* Middle Header */}
-      {isScrolled ? (
-        <div className="sticky top-0 z-50 bg-white w-full transform transition-all duration-300 shadow-lg">
+      {isScrolled || isMobile ? (
+        <div className="fixed top-0 z-50 bg-white w-full transform transition-all duration-300 shadow-lg">
           <SubHeader />
         </div>
       ) : (
-        <div className="lg:h-24 py-6 border-b border-gray-300">
+        <div className="lg:h-24 py-6 border-b border-gray-300 transform transition-all duration-200">
           <div className="container mx-auto grid grid-cols-3 items-center px-4">
             {/* Logo */}
             <div className="col-span-1">
@@ -176,20 +152,23 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
               />
               <div className="relative flex items-center px-4 border-l z-30">
                 <button
+                  aria-expanded={openDropdown === "select category"}
+                  aria-controls="category-dropdown"
                   className="flex items-center cursor-pointer bg-transparent focus:outline-none"
-                  onClick={() => setSelectCategoryClicked((prev) => !prev)}
+                  onClick={() => toggleDropdown("select category")}
                 >
                   Select Category
                   <ChevronDown
                     className={`ml-2 transition-transform ${
-                      selectCategoryClicked ? "rotate-180" : ""
+                      openDropdown === "select category" ? "rotate-180" : ""
                     }`}
                     size={16}
                   />
                 </button>
                 <div
+                  id="category-dropdown"
                   className={`absolute left-0 top-full bg-white shadow-md mt-2 w-48 text-sm p-3 rounded transition-all duration-200 z-50 ${
-                    selectCategoryClicked
+                    openDropdown === "select category"
                       ? "opacity-100 translate-y-0"
                       : "opacity-0 -translate-y-2 pointer-events-none"
                   }`}
@@ -229,7 +208,7 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
                 </div>
               </Link>
               <Heart className="hidden lg:block h-8 w-8 text-gray-700 hover:text-[#0989ff] cursor-pointer" />
-              <ShoppingBag className="h-8 w-8 text-gray-700 hover:text-[#0989ff] cursor-pointer" />
+              <ShoppingBag className="h-6 w-6 text-gray-700 hover:text-[#0989ff] cursor-pointer" />
               <button className="lg:hidden">
                 <Menu className="h-6 w-6" />
               </button>
@@ -239,28 +218,31 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
       )}
 
       {/* Category Menu */}
-      <div className="h-12">
+      <div className="h-12 hidden lg:block mt-0.5">
         <div className="container lg:grid grid-cols-3 items-center mx-auto px-4 hidden">
           <div className="flex items-center col-span-2 gap-x-10 relative">
             <button
+              aria-expanded={openDropdown === "all category"}
+              aria-controls="all-category-dropdown"
               className="flex items-center justify-center h-12 border text-white border-[#0989ff] w-1/3 bg-[#0989ff] hover:bg-black transition-all duration-300 gap-2 hover:border-black hover:cursor-pointer"
               onClick={() => {
-                setAllCategoriesClicked((prev) => !prev);
+                toggleDropdown("all category");
               }}
             >
               <AlignLeft className="h-5 w-5" />
               <span>All Categories</span>
               <ChevronDown
                 className={`transform transition-all duration-200 ${
-                  allCategoryClicked ? "rotate-180" : ""
+                  openDropdown === "all category" ? "rotate-180" : ""
                 }`}
               />
             </button>
 
             {/* Category Dropdown */}
             <div
+              id="all-category-dropdown"
               className={`absolute bg-white top-full z-50 min-w-[334px] left-0 border border-gray-200 shadow-lg transition-all duration-500 ${
-                allCategoryClicked
+                openDropdown === "all category"
                   ? "opacity-100 visible"
                   : "opacity-0 invisible"
               }`}
@@ -300,7 +282,6 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
                       className="hover:text-[#0989ff] cursor-pointer flex gap-2 items-center"
                     >
                       {item}
-                      {item !== "Contact" && <ChevronDown size={16} />}
                     </li>
                   )
                 )}

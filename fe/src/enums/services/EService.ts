@@ -4,4 +4,5 @@ export enum EService {
   USER_SERVICE = "users",
   CART_SERVICE = "cart",
   ORDER_SERVICE = "orders",
+  CATEGORY_SERVICE = "categories",
 }

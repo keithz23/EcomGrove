@@ -1,12 +1,26 @@
-import { Heart, SearchIcon, ShoppingBag, Menu } from "lucide-react";
+import {
+  Heart,
+  SearchIcon,
+  ShoppingBag,
+  X,
+  AlignRight,
+  ChevronDown,
+  AlignJustify,
+  ChevronRight,
+} from "lucide-react";
 import { Link } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 export default function SubHeader() {
   const [isActive, setIsActive] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropDown] = useState<string | null>(null);
 
   const searchRef = useRef<HTMLDivElement>(null);
+
+  const toggleDropdown = (dropdownKey: string) => {
+    setOpenDropDown((prev) => (prev === dropdownKey ? null : dropdownKey));
+  };
 
   const toggleSetIsActive = () => {
     setIsActive(true);
@@ -15,21 +29,6 @@ export default function SubHeader() {
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen((prev) => !prev);
   };
-
-  // Close on outside click
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
-      ) {
-        setIsActive(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   return (
     <div>
@@ -90,7 +89,7 @@ export default function SubHeader() {
                 className="lg:hidden text-gray-700"
                 onClick={toggleMobileMenu}
               >
-                <Menu className="h-6 w-6" />
+                <AlignRight className="h-6 w-6" />
               </button>
             </div>
           </div>
@@ -98,18 +97,130 @@ export default function SubHeader() {
       </div>
 
       {/* Mobile Dropdown Menu */}
-      {isMobileMenuOpen && (
-        <div className="lg:hidden bg-white shadow-md px-5 py-4">
-          <ul className="flex flex-col gap-4 text-sm text-gray-700">
-            <li className="hover:text-[#0989ff] cursor-pointer">Home</li>
-            <li className="hover:text-[#0989ff] cursor-pointer">Shop</li>
-            <li className="hover:text-[#0989ff] cursor-pointer">Products</li>
-            <li className="hover:text-[#0989ff] cursor-pointer">Contact</li>
-            <li className="hover:text-[#0989ff] cursor-pointer">Coupons</li>
-            <li className="hover:text-[#0989ff] cursor-pointer">Blog</li>
-          </ul>
+      <div
+        className={`fixed inset-0 z-50 flex transform transition-all duration-300 h-[100vh] ${
+          isMobileMenuOpen
+            ? "translate-x-0 opacity-100 overflow-y-hidden"
+            : "translate-x-full opacity-0 pointer-events-none"
+        }`}
+      >
+        {/* Overlay */}
+        <div
+          className={`bg-black/70 bg-opacity-50 w-full transition-opacity duration-300 ${
+            isMobileMenuOpen ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={toggleMobileMenu}
+        ></div>
+
+        {/* Sidebar */}
+        <div
+          className={`min-w-[380px] bg-white h-full shadow-lg flex flex-col justify-between transform transition-transform duration-300 ${
+            isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          <div className="flex flex-col justify-center gap-y-5 p-5">
+            {/* Logo + Close button */}
+            <div className="flex items-center">
+              <Link to="/">
+                <img
+                  src="https://shofy-svelte.vercel.app/img/logo/logo.svg"
+                  alt="Brand Logo"
+                  className="h-9"
+                />
+              </Link>
+
+              <button
+                className="absolute right-4 text-gray-700 border border-gray-300 p-1 bg-gray-200"
+                onClick={toggleMobileMenu}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Category section */}
+            <div className="flex flex-col w-full">
+              <button
+                className="flex items-center justify-between h-12 px-5 border text-white border-[#0989ff] w-full bg-[#0989ff] hover:bg-black transition-all duration-300 gap-2 hover:border-black hover:cursor-pointer"
+                onClick={() => toggleDropdown("category")}
+              >
+                <div className="flex items-center gap-x-2">
+                  <AlignJustify className="h-5 w-5 font-semibold" />
+                  <span>All Categories</span>
+                </div>
+                <div className="flex justify-end items-center -rotate-90">
+                  <ChevronDown
+                    className={`transform transition-all duration-200 ${
+                      openDropdown === "category" ? "rotate-90" : ""
+                    }`}
+                  />
+                </div>
+              </button>
+
+              {openDropdown === "category" && (
+                <div className="w-full bg-white  rounded-md mt-2">
+                  <ul className="p-4 space-y-3">
+                    {[
+                      "Headphones",
+                      "Smartphones",
+                      "Laptops",
+                      "Accessories",
+                    ].map((category) => (
+                      <li
+                        key={category}
+                        className="p-2 rounded-md cursor-pointer transition border-b border-gray-300 mb-3"
+                      >
+                        <div className="flex items-center justify-between gap-x-4 group">
+                          <div className="flex items-center gap-x-4">
+                            <img
+                              src="https://i.ibb.co/sVxYFDY/product-cat-1.png"
+                              alt={category}
+                              className="w-12 h-12 object-contain"
+                            />
+                            <span className="text-sm font-medium text-gray-800 transition-all duration-200">
+                              {category}
+                            </span>
+                          </div>
+                          <ChevronRight className="h-5 w-5 text-gray-500 border border-gray-300" />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Menu */}
+            <div className="p-6">
+              <ul className="flex flex-col gap-4 text-md font-semibold text-gray-700">
+                {["Home", "Shop", "Products", "Blog", "Coupons", "Contact"].map(
+                  (item) => (
+                    <li
+                      key={item}
+                      className="hover:text-[#0989ff] cursor-pointer flex gap-2 items-center justify-between"
+                    >
+                      {item}
+                    </li>
+                  )
+                )}
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-200 p-2 text-sm">
+            <div className="flex items-center justify-around">
+              {/* Currency */}
+              <button className="flex gap-x-3">
+                Currency: USD <ChevronDown />
+              </button>
+
+              {/* Language */}
+              <button className="flex gap-x-3">
+                English <ChevronDown />
+              </button>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
