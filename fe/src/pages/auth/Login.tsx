@@ -1,24 +1,27 @@
-import { Toaster } from "react-hot-toast";
-import bg from "../../assets/bg.jpg";
+import { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useAuthStore } from "../../store/useAuthStore";
-import BackToHome from "../../components/common/BackToHome";
+import SubHeader from "../../components/common/SubHeader";
 import Loading from "../../components/common/Loading";
+import { Toaster } from "react-hot-toast";
+import backgroundLogin from "../../assets/background_login.png";
+import Footer from "../../components/common/Footer";
+import { EyeIcon, EyeOffIcon } from 'lucide-react';
 
 type FormValues = {
   email: string;
   password: string;
 };
 
-export default function Login() {
+const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+const Login = () => {
   const login = useAuthStore((state) => state.login);
   const ggLogin = useAuthStore((state) => state.ggLogin);
-
   const isLoading = useAuthStore((state) => state.isLoading);
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const [showPassword, setShowPassword] = useState(false);
 
-  // React Hook Form
   const {
     register,
     handleSubmit,
@@ -37,29 +40,65 @@ export default function Login() {
 
   return (
     <>
-      {/* Back to Home button */}
-      <BackToHome textColor="text-white" backTo="" />
+      <SubHeader />
 
-      <div
-        className="relative min-h-screen bg-cover bg-center flex flex-col justify-center items-center w-full"
-        style={{
-          backgroundImage: `url(${bg})`,
-        }}
-      >
-        <div className="absolute inset-0 bg-black opacity-50 z-0"></div>
+      <div className="container relative min-h-screen flex flex-col items-center justify-center px-4 py-8 mx-auto sm:py-12">
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <img
+            src={backgroundLogin}
+            className="w-full h-full object-cover"
+            alt="Background"
+          />
+        </div>
 
-        <div className="relative z-10 max-w-md w-full rounded-md shadow-md bg-transparent p-8">
-          <div className="flex flex-col items-center mb-6">
-            <h3 className="text-2xl text-white">Welcome Back</h3>
-            <span className="text-sm text-gray-300">
-              Enter your credentials to access your account
+        <div className="text-center mb-6 sm:mb-8 relative z-10">
+          <h3 className="text-gray-900 text-3xl font-semibold mb-1 sm:text-4xl">
+            My Account
+          </h3>
+          <div className="flex justify-center items-center text-sm text-[#a8acb0] gap-2">
+            <span className="relative after:content-['•'] after:mx-2 after:text-[#a8acb0]">
+              Home
             </span>
+            <span>My Account</span>
           </div>
-          <form className="space-y-4 w-full" onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex flex-col">
+        </div>
+
+        <div className="bg-white shadow-lg rounded-xl px-6 py-8 w-full max-w-md sm:max-w-lg relative z-10 overflow-hidden">
+          <h2 className="text-center text-xl font-semibold mb-1 sm:text-2xl">
+            Login to EcomGrove
+          </h2>
+          <p className="text-center text-sm text-gray-500 mb-5 sm:mb-6">
+            Don't have an account?{" "}
+            <a href="/signup" className="text-blue-500 hover:underline">
+              Create a free account
+            </a>
+          </p>
+
+          <div className="flex justify-center mb-4 sm:mb-5">
+            <GoogleLogin
+              onSuccess={handleLogin}
+              onError={() => alert("Login failed")}
+              text="signin_with"
+              shape="rectangular"
+              theme="outline"
+              size="large"
+              width="280"
+              context="signin"
+            />
+          </div>
+
+          <div className="text-center text-sm text-gray-400 mb-4 sm:mb-5">
+            or Sign in with Email
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="mb-4 sm:mb-5">
+              <label className="block text-sm font-medium mb-1.5">
+                Your Email
+              </label>
               <input
                 type="email"
-                placeholder="Enter your email"
+                placeholder="ecomgrove@mail.com"
                 {...register("email", {
                   required: "Email is required",
                   pattern: {
@@ -67,112 +106,94 @@ export default function Login() {
                     message: "Invalid email format",
                   },
                 })}
-                className={`border rounded-full px-5 py-3 text-white bg-transparent border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#fbceb5] transition-all duration-200 ease-in-out ${
-                  errors.email ? "border-red-500 focus:ring-red-500" : ""
-                }`}
+                className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 text-sm ${
+                  errors.email
+                    ? "border-red-400 ring-red-200"
+                    : "border-gray-300 focus:ring-blue-400"
+                } transition-colors`}
               />
-
               {errors.email && (
-                <span className="text-red-500 text-sm mt-1">
+                <span className="text-red-500 text-xs mt-1.5">
                   {errors.email.message}
                 </span>
               )}
             </div>
-            <div className="flex flex-col">
-              <input
-                type="password"
-                placeholder="Enter your password"
-                {...register("password", {
-                  required: "Password is required",
-                  minLength: {
-                    value: 8,
-                    message: "Password must be at least 6 characters",
-                  },
-                })}
-                className={`border rounded-full px-5 py-3 text-white bg-transparent border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#fbceb5] transition-all duration-200 ease-in-out ${
-                  errors.password ? "border-red-500 focus:ring-red-500" : ""
-                }`}
-              />
+
+            <div className="mb-4 sm:mb-5">
+              <label className="block text-sm font-medium mb-1.5">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Min. 6 characters"
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: {
+                      value: 6,
+                      message: "Password must be at least 6 characters",
+                    },
+                  })}
+                  className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 text-sm ${
+                    errors.password
+                      ? "border-red-400 ring-red-200"
+                      : "border-gray-300 focus:ring-blue-400"
+                  } transition-colors`}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOffIcon size={18} />
+                  ) : (
+                    <EyeIcon size={18} />
+                  )}
+                </button>
+              </div>
               {errors.password && (
-                <span className="text-red-500 text-sm mt-1">
+                <span className="text-red-500 text-xs mt-1.5">
                   {errors.password.message}
                 </span>
               )}
             </div>
+
+            <div className="flex justify-between items-center text-sm mb-5 sm:mb-6">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 text-[#0989ff] border-gray-300 rounded"
+                />
+                Remember me
+              </label>
+              <a href="#" className="text-[#0989ff] hover:underline">
+                Forgot Password?
+              </a>
+            </div>
+
             <button
               type="submit"
-              className="w-full bg-[#fbceb5] text-black rounded-full px-5 py-3 transition duration-200 hover:cursor-pointer hover:bg-[#e0b39d]"
               disabled={isLoading}
+              className="w-full bg-black text-white py-2.5 rounded-lg hover:bg-[#0989ff] transition-colors text-sm font-medium disabled:bg-gray-500 disabled:cursor-not-allowed duration-300"
             >
-              {isLoading ? <div>Processing...</div> : "SIGN IN"}
+              {isLoading ? "Processing..." : "Login"}
             </button>
-            <div className="flex justify-end">
-              <a
-                href="#"
-                className="text-white hover:text-indigo-500 transition-all duration-300 ease-in-out hover:underline underline-offset-2"
-              >
-                Forgot password
-              </a>
-            </div>
           </form>
-          <div className="text-center mt-4">
-            <span className="text-sm text-white">
-              Don't have an account?{" "}
-              <a href="/signup" className="text-blue-500 hover:underline">
-                Signup
-              </a>
-            </span>
-          </div>
-          <div className="flex flex-col justify-center items-center text-white text-xl mt-5">
-            - Or Sign In With -{" "}
-            <div className="mt-5">
-              <GoogleOAuthProvider clientId={clientId}>
-                <div className="">
-                  <GoogleLogin
-                    text="signin_with"
-                    onSuccess={handleLogin}
-                    onError={() => {
-                      alert("Đăng nhập thất bại!");
-                    }}
-                  />
-                </div>
-              </GoogleOAuthProvider>
-            </div>
-          </div>
         </div>
-        <Loading isVisible={isLoading} />
-        <Toaster />
       </div>
+
+      <Loading isVisible={isLoading} />
+      <Toaster />
+      <Footer />
     </>
   );
+};
 
-  // return (
-  //   <div className="relative w-full h-screen">
-  //     <div className="container"></div>
-  //     <img
-  //       src="https://shofy-svelte.vercel.app/img/login/login-shape-1.png"
-  //       className="absolute top-[10%] left-[5%] w-8 h-8"
-  //       alt="decoration"
-  //     />
-  //     <img
-  //       src="https://shofy-svelte.vercel.app/img/login/login-shape-2.png"
-  //       className="absolute top-[20%] right-[10%] w-6 h-6"
-  //       alt="decoration"
-  //     />
-  //     <img
-  //       src="https://shofy-svelte.vercel.app/img/login/login-shape-3.png"
-  //       className="absolute bottom-0 right-0 w-52"
-  //       alt="people"
-  //     />
-  //     <img
-  //       src="https://shofy-svelte.vercel.app/img/login/login-shape-4.png"
-  //       className="absolute bottom-0 right-0 w-52"
-  //       alt="people"
-  //     />
-  //     {/* Background elements */}
+const WrappedLogin = () => (
+  <GoogleOAuthProvider clientId={clientId}>
+    <Login />
+  </GoogleOAuthProvider>
+);
 
-  //     {/* Main Login Form */}
-  //     <div className="relative z-10 flex justify-center items-center h-full"></div>
-  //   </div>
-  // );
-}
+export default WrappedLogin;
