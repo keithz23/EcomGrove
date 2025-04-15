@@ -2,9 +2,8 @@ import { Nav } from "../interfaces";
 
 export const navItems: Nav[] = [
   { name: "Home", href: "/" },
-  { name: "About", href: "/about" },
   { name: "Shop", href: "/shop" },
-  { name: "Feature", href: "/feature" },
+  { name: "Products", href: "/feature" },
   { name: "Contact", href: "/contact" },
 ];
 

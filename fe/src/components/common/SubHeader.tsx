@@ -11,6 +11,7 @@ import {
 import { Link } from "react-router-dom";
 import { useRef, useState } from "react";
 import { useCategoryData } from "../../hooks/useCategoryData";
+import { navItems } from "../../utils";
 
 export default function SubHeader() {
   const [isActive, setIsActive] = useState(false);
@@ -49,16 +50,14 @@ export default function SubHeader() {
             {/* Desktop Nav */}
             <div className="hidden lg:flex ml-3">
               <ul className="flex gap-4 text-sm text-gray-700">
-                {["Home", "Shop", "Products", "Blog", "Coupons", "Contact"].map(
-                  (item) => (
-                    <li
-                      key={item}
-                      className="hover:text-[#0989ff] cursor-pointer flex gap-2 items-center"
-                    >
-                      {item}
-                    </li>
-                  )
-                )}
+                {navItems.map((item, idx) => (
+                  <li
+                    key={idx}
+                    className="hover:text-[#0989ff] cursor-pointer flex gap-2 items-center"
+                  >
+                    <a href={item.href}>{item.name}</a>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -191,16 +190,14 @@ export default function SubHeader() {
             {/* Menu */}
             <div className="p-6">
               <ul className="flex flex-col gap-4 text-md font-semibold text-gray-700">
-                {["Home", "Shop", "Products", "Blog", "Coupons", "Contact"].map(
-                  (item) => (
-                    <li
-                      key={item}
-                      className="hover:text-[#0989ff] cursor-pointer flex gap-2 items-center justify-between"
-                    >
-                      {item}
-                    </li>
-                  )
-                )}
+                {navItems.map((item, idx) => (
+                  <li
+                    key={idx}
+                    className="hover:text-[#0989ff] cursor-pointer flex gap-2 items-center justify-between"
+                  >
+                    <a href={item.href}>{item.name}</a>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>

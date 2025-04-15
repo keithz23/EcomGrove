@@ -1,12 +1,15 @@
+import { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import "../../styles/global-style.css";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/useAuthStore";
 import Loading from "../../components/common/Loading";
-import { EURI } from "../../enums/EURI";
-import { ETypes } from "../../enums/ETypes";
-import {Header} from "../../components/common/Header";
+import backgroundLogin from "../../assets/background_login.png";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
+import SubHeader from "../../components/common/SubHeader";
+import Footer from "../../components/common/Footer";
 
 type FormValues = {
   firstName: string;
@@ -19,8 +22,8 @@ type FormValues = {
 
 export default function Signup() {
   const navigate = useNavigate();
-  const signup = useAuthStore((state) => state.signup);
-  const isLoading = useAuthStore((state) => state.isLoading);
+  const { signup, ggLogin, isLoading } = useAuthStore();
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -30,19 +33,32 @@ export default function Signup() {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
-      const response = await signup(data);
-      if (response) {
-        navigate("/login");
-      }
+      await signup(data);
+      toast.success("Signup successful! Please log in.");
+      navigate("/login");
     } catch (error: any) {
-      toast.error("Something went wrong. Please try again.");
+      const message =
+        error.response?.data?.message || "Signup failed. Please try again.";
+      toast.error(message);
     }
   };
 
-  const input = [
+  const handleGoogleLogin = async (credentialResponse: any) => {
+    try {
+      await ggLogin(credentialResponse.credential);
+      toast.success("Google signup successful!");
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast.error("Google signup failed. Please try again.");
+    }
+  };
+
+  const inputFields = [
     {
       name: "firstName",
+      label: "First Name",
       placeHolder: "Enter your first name",
+      type: "text",
       validation: {
         required: "First name is required",
         minLength: {
@@ -53,7 +69,9 @@ export default function Signup() {
     },
     {
       name: "lastName",
+      label: "Last Name",
       placeHolder: "Enter your last name",
+      type: "text",
       validation: {
         required: "Last name is required",
         minLength: {
@@ -64,7 +82,9 @@ export default function Signup() {
     },
     {
       name: "username",
+      label: "Username",
       placeHolder: "Enter your username",
+      type: "text",
       validation: {
         required: "Username is required",
         minLength: {
@@ -75,7 +95,9 @@ export default function Signup() {
     },
     {
       name: "phoneNumber",
+      label: "Phone Number",
       placeHolder: "Enter your phone number",
+      type: "tel",
       validation: {
         required: "Phone number is required",
         pattern: {
@@ -86,6 +108,7 @@ export default function Signup() {
     },
     {
       name: "email",
+      label: "Email",
       placeHolder: "Enter your email",
       type: "email",
       validation: {
@@ -98,77 +121,154 @@ export default function Signup() {
     },
     {
       name: "password",
+      label: "Password",
       placeHolder: "Enter your password",
       type: "password",
       validation: {
         required: "Password is required",
-        pattern: {
-          value: /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).*$/,
-          message:
-            "assword must contain at least one uppercase letter and one special character.",
-        },
         minLength: {
           value: 8,
           message: "Password must be at least 8 characters",
         },
+        pattern: {
+          value: /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).*$/,
+          message:
+            "Password must contain at least one uppercase letter and one special character",
+        },
       },
     },
-  ];
+  ] as const;
+
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+  if (!clientId) {
+    console.warn(
+      "Google Client ID is missing. Please set VITE_GOOGLE_CLIENT_ID in .env"
+    );
+  }
 
   return (
     <>
-      <Header />
-      <div
-        className="relative min-h-screen bg-cover bg-center flex flex-col justify-center items-center w-full"
-        style={{
-          backgroundImage: `url(${EURI.IMAGE_URI}/${ETypes.CITY}/city_10.jpg)`,
-        }}
-      >
-        <div className="absolute inset-0 bg-black opacity-50 z-0"></div>
-        <div className="relative z-10 max-w-md w-full rounded-md shadow-md bg-transparent p-8">
-          <div className="flex flex-col items-center mb-6">
-            <h3 className="text-2xl text-gray-100">Create Account</h3>
-            <span className="text-sm text-gray-400">
-              Enter your credentials to access your account
-            </span>
+      <div className="sticky top-0 z-50 bg-white w-full transform transition-all duration-300 shadow-lg">
+        <SubHeader />
+      </div>
+
+      <GoogleOAuthProvider clientId={clientId}>
+        <div className="container relative min-h-screen flex flex-col items-center justify-center px-4 py-8 mx-auto sm:py-12">
+          <div className="absolute inset-0 z-0 overflow-hidden">
+            <img
+              src={backgroundLogin}
+              className="w-full h-full object-cover"
+              alt="Background"
+            />
           </div>
-          <form className="space-y-4 w-full" onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex flex-col space-y-5">
-              {input.map((ip) => (
-                <div key={ip.name} className="flex flex-col">
-                  <input
-                    type={ip.type || "text"}
-                    {...register(ip.name as keyof FormValues, ip.validation)}
-                    placeholder={ip.placeHolder}
-                    className={`border rounded-full px-5 py-3 text-gray-100 bg-transparent border-gray-300 focus:outline-none focus:ring-[#fbecb5] focus:ring-1 transition-all duration-200 ease-in-out ${
-                      errors[ip.name as keyof FormValues]
-                        ? "border-red-500 focus:ring-red-500"
-                        : ""
-                    }`}
-                  />
-                  {errors[ip.name as keyof FormValues] && (
-                    <span className="text-red-500 text-sm mt-1">
-                      {
-                        errors[ip.name as keyof FormValues]
-                          ?.message as React.ReactNode
+
+          <div className="text-center mb-6 sm:mb-8 relative z-10">
+            <h3 className="text-gray-900 text-3xl font-semibold mb-1 sm:text-4xl">
+              My account
+            </h3>
+            <div className="flex justify-center items-center text-sm text-[#a8acb0] gap-2">
+              <span className="relative after:content-['•'] after:mx-2 after:text-[#a8acb0]">
+                Home
+              </span>
+              <span>Sign Up</span>
+            </div>
+          </div>
+
+          <div className="bg-white shadow-lg rounded-xl px-6 py-8 w-full max-w-md sm:max-w-lg relative z-10">
+            <h2 className="text-center text-xl font-semibold mb-1 sm:text-2xl">
+              Sign Up for EcomGrove
+            </h2>
+            <p className="text-center text-sm text-gray-500 mb-5 sm:mb-6">
+              Already have an account?{" "}
+              <a href="/login" className="text-blue-500 hover:underline">
+                Sign In
+              </a>
+            </p>
+
+            {clientId ? (
+              <div className="flex justify-center mb-4 sm:mb-5">
+                <GoogleLogin
+                  onSuccess={handleGoogleLogin}
+                  onError={() => toast.error("Google signup failed")}
+                  text="continue_with"
+                  shape="rectangular"
+                  theme="outline"
+                  size="large"
+                  width="280"
+                  context="signup"
+                />
+              </div>
+            ) : (
+              <p className="text-center text-red-500 mb-4 sm:mb-5">
+                Google signup unavailable: Client ID missing
+              </p>
+            )}
+
+            <div className="text-center text-sm text-gray-400 mb-4 sm:mb-5">
+              or Sign up with Email
+            </div>
+
+            <form onSubmit={handleSubmit(onSubmit)}>
+              {inputFields.map((field) => (
+                <div key={field.name} className="mb-4 sm:mb-5">
+                  <label
+                    htmlFor={field.name}
+                    className="block text-sm font-medium mb-1.5"
+                  >
+                    {field.label}
+                  </label>
+                  <div className="relative">
+                    <input
+                      id={field.name}
+                      type={
+                        field.name === "password" && showPassword
+                          ? "text"
+                          : field.type
                       }
+                      placeholder={field.placeHolder}
+                      {...register(field.name, field.validation)}
+                      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 text-sm ${
+                        errors[field.name]
+                          ? "border-red-400 ring-red-200"
+                          : "border-gray-300 focus:ring-blue-400"
+                      } transition-colors`}
+                    />
+                    {field.name === "password" && (
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOffIcon size={18} />
+                        ) : (
+                          <EyeIcon size={18} />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                  {errors[field.name] && (
+                    <span className="text-red-500 text-xs mt-1.5">
+                      {errors[field.name]?.message}
                     </span>
                   )}
                 </div>
               ))}
-            </div>
-            <button
-              disabled={isLoading}
-              type="submit"
-              className="w-full bg-[#fbceb5] text-black rounded-full px-5 py-3 transition duration-200 hover:cursor-pointer hover:bg-[#e0b39d]"
-            >
-              {isLoading ? <div>Processing...</div> : "SIGN UP"}
-            </button>
-          </form>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-black text-white py-2.5 rounded-lg hover:bg-[#0989ff] transition-colors text-sm font-medium disabled:bg-gray-500 disabled:cursor-not-allowed duration-300"
+              >
+                {isLoading ? "Signing Up..." : "Sign Up"}
+              </button>
+            </form>
+          </div>
         </div>
-        <Toaster />
         <Loading isVisible={isLoading} />
-      </div>
+        <Toaster />
+        <Footer />
+      </GoogleOAuthProvider>
     </>
   );
 }

@@ -15,6 +15,7 @@ import { Link, useNavigate } from "react-router-dom";
 import SubHeader from "./SubHeader";
 import { useWindowEvents } from "../../hooks/useWindowsEvent";
 import { useCategoryData } from "../../hooks/useCategoryData";
+import { navItems } from "../../utils";
 
 interface HeaderColor {
   color?: string;
@@ -172,11 +173,11 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
                 </button>
               </div>
 
-              {/* Dropdown (Absolutely positioned within relative parent) */}
+              {/* Dropdown */}
               {openDropdown === "select category" && (
                 <div
                   id="category-dropdown"
-                  className="absolute right-0 top-full mt-2 w-48 bg-white shadow-md max-h-36 overflow-auto text-sm p-3 rounded z-[9999] transition-all duration-200"
+                  className="absolute right-0 top-full mt-2 w-48 bg-white shadow-md max-h-36 overflow-auto text-sm p-3 rounded z-50 transition-all duration-200"
                 >
                   <ul className="space-y-2">
                     <li className="font-semibold text-gray-600">
@@ -202,7 +203,7 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
                 <div>
                   <span className="text-sm text-gray-500 font-medium">
                     {isAuthenticated
-                      ? `Hi, ${user?.name ?? "User"}`
+                      ? `Hi, ${user?.name ?? user?.username}`
                       : "Sign In"}
                   </span>
                   <h5 className="text-md font-bold text-gray-700">
@@ -274,16 +275,14 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
 
             <div>
               <ul className="flex gap-4 text-md text-gray-700">
-                {["Home", "Shop", "Products", "Blog", "Coupons", "Contact"].map(
-                  (item) => (
-                    <li
-                      key={item}
-                      className="hover:text-[#0989ff] cursor-pointer flex gap-2 items-center"
-                    >
-                      {item}
-                    </li>
-                  )
-                )}
+                {navItems.map((item, idx) => (
+                  <li
+                    key={idx}
+                    className="hover:text-[#0989ff] cursor-pointer flex gap-2 items-center"
+                  >
+                    <a href={item.href}>{item.name}</a>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>

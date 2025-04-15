@@ -13,6 +13,7 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Checkout from "./pages/shop/Checkout";
+import NotFound from "./pages/Not-Found";
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -46,6 +47,7 @@ function App() {
         <Route path={`/product/:id`} element={<ProductDetails />} />
         <Route path="/cart-details" element={<CartDetails />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </QueryClientProvider>
   );

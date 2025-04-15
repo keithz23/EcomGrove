@@ -7,7 +7,7 @@ import Loading from "../../components/common/Loading";
 import { Toaster } from "react-hot-toast";
 import backgroundLogin from "../../assets/background_login.png";
 import Footer from "../../components/common/Footer";
-import { EyeIcon, EyeOffIcon } from 'lucide-react';
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 type FormValues = {
   email: string;
@@ -40,7 +40,9 @@ const Login = () => {
 
   return (
     <>
-      <SubHeader />
+      <div className="stickty">
+        <SubHeader />
+      </div>
 
       <div className="container relative min-h-screen flex flex-col items-center justify-center px-4 py-8 mx-auto sm:py-12">
         <div className="absolute inset-0 z-0 overflow-hidden">
@@ -78,7 +80,7 @@ const Login = () => {
             <GoogleLogin
               onSuccess={handleLogin}
               onError={() => alert("Login failed")}
-              text="signin_with"
+              text="continue_with"
               shape="rectangular"
               theme="outline"
               size="large"
