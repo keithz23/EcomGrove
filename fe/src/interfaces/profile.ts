@@ -1,3 +1,5 @@
+import { JSX } from "react";
+
 export interface personal {
   firstName: string;
   lastName: string;
@@ -22,14 +24,17 @@ export interface profile {
   ordersHistory: null;
 }
 
-export interface profileInput {
-  section: string;
+export interface InformationRow {
+  id: number;
+  fields: InformationInput[];
+}
+
+export interface InformationInput {
+  id?: string;
   label: string;
-  fields: Array<{
-    label: string;
-    type?: string;
-    value?: string;
-    name?: string;
-    isDisable?: boolean
-  }>;
+  type?: string;
+  value?: string;
+  name?: string;
+  isDisable?: boolean;
+  icon?: JSX.Element;
 }

@@ -40,7 +40,7 @@ const Login = () => {
 
   return (
     <>
-      <div className="stickty">
+      <div className="sticky top-0 z-50 bg-white w-full transform transition-all duration-300 shadow-lg">
         <SubHeader />
       </div>
 
