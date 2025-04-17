@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Heart, ShoppingCart, Minus, Plus, Star } from "lucide-react";
 import { ProductItems } from "../../utils";
-import Header from "../common/Header";
+import { Header } from "../common/Header";
 import Footer from "../common/Footer";
 import Loading from "../common/Loading";
 import { cartService } from "../../services/cartService";

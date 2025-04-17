@@ -13,7 +13,7 @@ export default function Footer() {
                 key={item.id}
                 className="hover:text-indigo-400 transition-all duration-300 ease-in-out hover:cursor-pointer"
               >
-                <a href={item.href} aria-label={`Go to ${item.name}`}>
+                <a href="#" aria-label={`Go to ${item.name}`}>
                   {item.name}
                 </a>
               </li>
@@ -68,7 +68,9 @@ export default function Footer() {
             className="border-b-1 border-b-gray-700 border-spacing-10 focus:outline-none focus:border-b-indigo-500 transition-all duration-300 text-sm py-2 px-2 w-full"
             aria-label="Enter your email for the newsletter"
           />
-          <button className="mt-5 w-full py-2 px-3 rounded-full bg-indigo-400 text-white shadow-md hover:bg-white hover:text-indigo-400 hover:cursor-pointer transition-all duration-300 ease-in-out uppercase">subscribe</button>
+          <button className="mt-5 w-full py-2 px-3 rounded-full bg-indigo-400 text-white shadow-md hover:bg-white hover:text-indigo-400 hover:cursor-pointer transition-all duration-300 ease-in-out uppercase">
+            subscribe
+          </button>
         </div>
       </div>
     </footer>

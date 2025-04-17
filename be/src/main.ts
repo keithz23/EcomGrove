@@ -41,12 +41,12 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  app.use(
-    rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 100,
-    }),
-  );
+  // app.use(
+  //   rateLimit({
+  //     windowMs: 15 * 60 * 1000,
+  //     max: 100,
+  //   }),
+  // );
   const port = configService.get<number>('PORT') || 3000;
   await app.listen(port, '0.0.0.0');
 }
