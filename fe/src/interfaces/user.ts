@@ -24,12 +24,12 @@ export interface IUserUpdate {
 }
 
 export interface IChangePassword {
-  currentPassword: string,
-  newPassword: string,
-  confirmNewPassword: string
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export interface UpdateProfileRequest {
-  userUpdate: IUserUpdate,
-  otp: string
+  userUpdate: IUserUpdate;
+  otp: string;
 }

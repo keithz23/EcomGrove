@@ -147,8 +147,8 @@ export default function Signup() {
   }
 
   return (
-    <>
-      <div className="sticky top-0 z-50 bg-white w-full transform transition-all duration-300 shadow-lg">
+    <div className="overflow-x-hidden">
+      <div className="sticky top-0 z-50 bg-white transform transition-all duration-300 shadow-lg">
         <SubHeader />
       </div>
 
@@ -269,6 +269,6 @@ export default function Signup() {
         <Toaster />
         <Footer />
       </GoogleOAuthProvider>
-    </>
+    </div>
   );
 }

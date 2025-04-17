@@ -38,3 +38,18 @@ export interface InformationInput {
   isDisable?: boolean;
   icon?: JSX.Element;
 }
+
+export interface ChangePasswordRow {
+  id: number;
+  fields: ChangePasswordInput[];
+}
+
+export interface ChangePasswordInput {
+  id?: string;
+  label: string;
+  type?: string;
+  value?: string;
+  name?: string;
+  isDisable?: boolean;
+  icon?: JSX.Element;
+}

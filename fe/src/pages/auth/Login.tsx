@@ -39,7 +39,7 @@ const Login = () => {
   };
 
   return (
-    <>
+    <div className="overflow-x-hidden">
       <div className="sticky top-0 z-50 bg-white w-full transform transition-all duration-300 shadow-lg">
         <SubHeader />
       </div>
@@ -188,7 +188,7 @@ const Login = () => {
       <Loading isVisible={isLoading} />
       <Toaster />
       <Footer />
-    </>
+    </div>
   );
 };
 
