@@ -1,67 +1,106 @@
 import {
-  IChangePassword,
-  IUserUpdate,
-  profile,
-  profileInput,
-} from "../interfaces";
-import toast, { Toaster } from "react-hot-toast";
-import Modal from "../components/common/Modal";
-import { useState } from "react";
-import { ModalUpload } from "../components/common/ModalUpload";
-import { authService } from "../services/authService";
-import { useAuthStore } from "../store/useAuthStore";
+  UserPen,
+  Info,
+  MapPin,
+  ClipboardList,
+  Bell,
+  Lock,
+  Camera,
+  Download,
+  PackageOpen,
+  Heart,
+  Gift,
+  User,
+  IdCard,
+  Phone,
+  Mail,
+} from "lucide-react";
+import { JSX, useState, useEffect } from "react";
 import { useProfileData } from "../hooks";
-import { userService } from "../services";
-import BackToHome from "../components/common/BackToHome";
+import { useAuthStore } from "../store/useAuthStore";
+import { useNavigate } from "react-router-dom";
+import { ModalUpload } from "../components/common/ModalUpload";
+import SubHeader from "../components/common/SubHeader";
+import Footer from "../components/common/Footer";
+import {
+  ChangePasswordRow,
+  IChangePassword,
+  InformationRow,
+} from "../interfaces";
+import { authService, userService } from "../services";
+import Modal from "../components/common/Modal";
+import toast from "react-hot-toast";
+import { useForm } from "react-hook-form";
+
+type FormValues = {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
+
+type InformationFormValues = {
+  firstName: string;
+  lastName: string;
+  username: string;
+  phoneNumber: string;
+  email: string;
+};
 
 export default function Profile() {
+  const navigate = useNavigate();
+  const [isModalUploadOpen, setIsModalUploadOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [actionType, setActionType] = useState<
+    "changePassword" | "updateUser" | ""
+  >("");
   const { formData, updateFormData, handleChange, isGoogleLogin } =
     useProfileData();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isModalUploadOpen, setIsModalUploadOpen] = useState(false);
-  const [actionType, setActionType] = useState("");
+  const [isActive, setIsActive] = useState<string>("Profile");
+  const [isInputActive, setIsInputActive] = useState<string>("");
   const { logout } = useAuthStore();
-  const [password, setPassword] = useState<IChangePassword>({
-    currentPassword: "",
-    newPassword: "",
-    confirmNewPassword: "",
-  });
 
-  const handleModalUpload = () => {
-    setIsModalUploadOpen(!isModalUploadOpen);
+  // Form hooks for Change Password
+  const {
+    register,
+    handleSubmit: handlePasswordSubmit,
+    formState: { errors: passwordErrors },
+    reset: resetPasswordForm,
+  } = useForm<FormValues>({ mode: "onBlur" });
+
+  // Form hooks for Information
+  const {
+    register: registerInfo,
+    handleSubmit: handleInfoSubmit,
+    formState: { errors: infoErrors },
+    setValue: setInfoValue,
+  } = useForm<InformationFormValues>({ mode: "onBlur" });
+
+  useEffect(() => {
+    if (formData?.personal) {
+      setInfoValue("firstName", formData.personal.firstName || "");
+      setInfoValue("lastName", formData.personal.lastName || "");
+      setInfoValue("username", formData.personal.username || "");
+      setInfoValue("phoneNumber", formData.personal.phoneNumber || "");
+      setInfoValue("email", formData.personal.email || "");
+    }
+  }, [formData, setInfoValue]);
+
+  const handleModalUpload = () => setIsModalUploadOpen(!isModalUploadOpen);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
-  const handleUpdateUser = async (otpValue: string) => {
-    const payload: IUserUpdate = {
-      firstName: updateFormData.personal.firstName,
-      lastName: updateFormData.personal.lastName,
-      email: updateFormData.personal.email,
-      username: updateFormData.personal.username,
-      phoneNumber: updateFormData.personal.phoneNumber,
-    };
+  const handleActiveTab = (tab: string) => setIsActive(tab);
 
-    const headers = {
-      "Content-Type": "application/json",
-      otp: otpValue,
-    };
+  const handleActiveInput = (input: string) => setIsInputActive(input);
 
-    const response = await userService.updateUser(payload, headers);
-
-    return response;
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword({
-      ...password,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleChangePassword = async (otpValue: string) => {
+  const handleChangePassword = async (otpValue: string, data: FormValues) => {
     const payload: IChangePassword = {
-      currentPassword: password.currentPassword,
-      newPassword: password.newPassword,
-      confirmNewPassword: password.confirmNewPassword,
+      oldPassword: data.oldPassword,
+      newPassword: data.newPassword,
+      confirmPassword: data.confirmPassword,
     };
 
     const headers = {
@@ -69,26 +108,52 @@ export default function Profile() {
       otp: otpValue,
     };
 
-    const response = await authService.changePassword(payload, headers);
-
-    return response;
+    return await authService.changePassword(payload, headers);
   };
 
-  const handleModalConfirm = async (otpValue: string) => {
+  const handleUpdateUser = async (
+    otpValue: string,
+    data: InformationFormValues
+  ) => {
+    try {
+      const response = await userService.updateUser(
+        {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          username: data.username,
+          phoneNumber: data.phoneNumber,
+          email: data.email,
+        },
+        { otp: otpValue }
+      );
+      return response;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to update user");
+    }
+  };
+
+  const handleModalConfirm = async (
+    otpValue: string,
+    formData?: FormValues | InformationFormValues
+  ) => {
     try {
       let response;
 
-      if (actionType === "updateUser") {
-        response = await handleUpdateUser(otpValue);
-      } else if (actionType === "changePassword") {
-        response = await handleChangePassword(otpValue);
-        setPassword({
-          currentPassword: "",
-          confirmNewPassword: "",
-          newPassword: "",
-        });
-
+      if (
+        actionType === "changePassword" &&
+        formData &&
+        "oldPassword" in formData
+      ) {
+        response = await handleChangePassword(otpValue, formData);
+        resetPasswordForm();
         await logout();
+      } else if (
+        actionType === "updateUser" &&
+        formData &&
+        "firstName" in formData
+      ) {
+        response = await handleUpdateUser(otpValue, formData);
+        // updateFormData(formData);
       }
 
       if (response?.status === 200) {
@@ -98,101 +163,400 @@ export default function Profile() {
         toast.error(response?.data?.message || "Something went wrong.");
       }
     } catch (error: any) {
-      toast.error("Something went wrong.");
+      toast.error(error.message || "Something went wrong.");
       console.error("Error:", error);
     } finally {
       setIsModalOpen(false);
     }
   };
 
-  // Handle modal cancellation
   const handleModalCancel = () => {
     setIsModalOpen(false);
   };
 
-  const profileInput: profileInput[] = [
-    {
-      section: "personal",
-      label: "Personal Information",
-      fields: [
-        {
-          label: "First name",
-          value: formData?.personal.firstName || "",
-          name: "firstName",
-        },
-        {
-          label: "Last name",
-          value: formData?.personal.lastName || "",
-          name: "lastName",
-        },
-        {
-          label: "Email",
-          type: "email",
-          value: formData?.personal.email || "",
-          name: "email",
-          isDisable: isGoogleLogin ? true : false,
-        },
-        {
-          label: "Username",
-          value: formData?.personal.username || "",
-          name: "username",
-        },
-        {
-          label: "Phone number",
-          value: formData?.personal.phoneNumber || "",
-          name: "phoneNumber",
-        },
-      ],
-    },
-    {
-      section: "address",
-      label: "Primary Address",
-      fields: [
-        {
-          label: "House number",
-          value: formData?.address.houseNumber,
-          name: "houseNumber",
-        },
-        { label: "Street", value: formData?.address.street, name: "street" },
-        { label: "Ward", value: formData?.address.ward, name: "ward" },
-        {
-          label: "District",
-          value: formData?.address.district,
-          name: "district",
-        },
-        { label: "City", value: formData?.address.city, name: "city" },
-        { label: "Country", value: formData?.address.country, name: "country" },
-      ],
-    },
-  ];
-
-  const handleUpdateInformation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsModalOpen(true);
+  const handleUpdateInformation = async (data: InformationFormValues) => {
+    setActionType("updateUser");
     try {
       const response = await userService.sendOtpCode();
       if (response.status === 200) {
         toast.success(response.data.message);
-        console.log(response.data.message);
+        setIsModalOpen(true);
+        // Pass form data to modal confirm
+        return { data, actionType: "updateUser" };
       }
     } catch (error: any) {
-      toast.error(error.response.data.message);
-      console.error(`Error while sending otp: ${error.response.data.message}`);
+      toast.error(error.response?.data?.message || "Failed to send OTP");
+      console.error(
+        `Error while sending otp: ${error.response?.data?.message}`
+      );
+      setIsModalOpen(false);
     }
   };
 
+  const handleChangePasswordSubmit = async (data: FormValues) => {
+    setActionType("changePassword");
+    try {
+      const response = await userService.sendOtpCode();
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        setIsModalOpen(true);
+        // Pass form data to modal confirm
+        return { data, actionType: "changePassword" };
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to send OTP");
+      console.error(
+        `Error while sending otp: ${error.response?.data?.message}`
+      );
+      setIsModalOpen(false);
+    }
+  };
+
+  const ProfileItems = [
+    { id: 1, name: "Profile", icon: <UserPen /> },
+    { id: 2, name: "Information", icon: <Info /> },
+    { id: 3, name: "Address", icon: <MapPin /> },
+    { id: 4, name: "My Orders", icon: <ClipboardList /> },
+    { id: 5, name: "Notification", icon: <Bell /> },
+    ...(isGoogleLogin
+      ? []
+      : [{ id: 6, name: "Change Password", icon: <Lock /> }]),
+  ];
+
+  const ProfileTabItems = [
+    { id: 1, name: "Downloads", icon: <Download size={45} /> },
+    { id: 2, name: "Orders", icon: <PackageOpen size={45} /> },
+    { id: 3, name: "Wishlist", icon: <Heart size={45} /> },
+    { id: 4, name: "Gift Box", icon: <Gift size={45} /> },
+  ];
+
+  const InformationInput: InformationRow[] = [
+    {
+      id: 1,
+      fields: [
+        {
+          id: "firstName",
+          label: "First name",
+          type: "text",
+          name: "firstName",
+          value: formData?.personal.firstName || "",
+          icon: <IdCard />,
+        },
+        {
+          id: "lastName",
+          type: "text",
+          label: "Last name",
+          name: "lastName",
+          value: formData?.personal.lastName || "",
+          icon: <IdCard />,
+        },
+      ],
+    },
+    {
+      id: 2,
+      fields: [
+        {
+          id: "username",
+          label: "Username",
+          type: "text",
+          name: "username",
+          value: formData?.personal.username || "",
+          icon: <User />,
+        },
+        {
+          id: "phoneNumber",
+          label: "Phone number",
+          type: "tel",
+          name: "phoneNumber",
+          value: formData?.personal.phoneNumber || "",
+          icon: <Phone />,
+        },
+      ],
+    },
+    {
+      id: 3,
+      fields: [
+        {
+          id: "email",
+          label: "Email",
+          type: "email",
+          name: "email",
+          value: formData?.personal.email || "",
+          icon: <Mail />,
+        },
+      ],
+    },
+  ];
+
+  const ChangePasswordInput: ChangePasswordRow[] = [
+    {
+      id: 1,
+      fields: [
+        {
+          id: "oldPassword",
+          label: "Old Password",
+          type: "password",
+          name: "oldPassword",
+          validations: {
+            required: "Old password is required",
+            minLength: {
+              value: 8,
+              message: "Old password must be at least 8 characters",
+            },
+            pattern: {
+              value: /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).*$/,
+              message:
+                "Password must contain at least one uppercase letter and one special character",
+            },
+          },
+        },
+      ],
+    },
+    {
+      id: 2,
+      fields: [
+        {
+          id: "newPassword",
+          label: "New Password",
+          type: "password",
+          name: "newPassword",
+          validations: {
+            required: "New password is required",
+            minLength: {
+              value: 8,
+              message: "New password must be at least 8 characters",
+            },
+            pattern: {
+              value: /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).*$/,
+              message:
+                "Password must contain at least one uppercase letter and one special character",
+            },
+          },
+        },
+        {
+          id: "confirmPassword",
+          label: "Confirm Password",
+          type: "password",
+          name: "confirmPassword",
+          validations: {
+            required: "Confirm password is required",
+            minLength: {
+              value: 8,
+              message: "Confirm password must be at least 8 characters",
+            },
+            pattern: {
+              value: /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).*$/,
+              message:
+                "Password must contain at least one uppercase letter and one special character",
+            },
+          },
+        },
+      ],
+    },
+  ];
+
+  const tabContent: Record<string, JSX.Element> = {
+    Profile: (
+      <div className="flex flex-col border border-gray-200 p-5 shadow-2xl bg-white">
+        <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4 p-4">
+          <div className="flex gap-x-4 items-center">
+            <div className="relative w-20 h-20" onClick={handleModalUpload}>
+              <img
+                src={
+                  formData?.personal.profilePicture ||
+                  "https://via.placeholder.com/80"
+                }
+                alt="Profile picture"
+                className="border rounded-full h-20 w-20 object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = "https://via.placeholder.com/80";
+                }}
+              />
+              <div className="absolute bottom-0 right-0 bg-[#0989ff] p-1 rounded-full shadow cursor-pointer hover:bg-black transition-all duration-300 ease-in-out">
+                <Camera className="h-4 w-4 text-white" />
+              </div>
+            </div>
+            <span className="text-2xl font-semibold">
+              Welcome {formData?.personal.username || "User"}!
+            </span>
+          </div>
+          <button
+            className="px-4 py-2 border border-gray-300 cursor-pointer hover:bg-[#0989ff] hover:text-white transition"
+            onClick={handleLogout}
+            aria-label="Logout"
+          >
+            Logout
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+          {ProfileTabItems.map((pit) => (
+            <div
+              className="p-6 border border-gray-200 flex flex-col items-center gap-3 hover:shadow"
+              key={pit.id}
+            >
+              <span>{pit.icon}</span>
+              <span className="font-semibold text-lg">{pit.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+    Information: (
+      <div className="flex flex-col border border-gray-200 p-7 shadow-2xl bg-white">
+        <h2 className="text-2xl font-semibold mb-6">Personal Details</h2>
+        <form
+          onSubmit={handleInfoSubmit(async (data) => {
+            const result = await handleUpdateInformation(data);
+            if (result) {
+              // Store form data for OTP confirmation
+              (window as any).__formData = result.data;
+            }
+          })}
+        >
+          {InformationInput.map((row) => (
+            <div
+              key={row.id}
+              className={`grid gap-4 mb-4 ${
+                row.fields.length === 3
+                  ? "grid-cols-1 md:grid-cols-3"
+                  : row.fields.length === 2
+                  ? "grid-cols-1 md:grid-cols-2"
+                  : "grid-cols-1"
+              }`}
+            >
+              {row.fields.map((field) => (
+                <div
+                  className={`border p-3 flex items-center gap-2 transition ${
+                    isInputActive === field.name
+                      ? "border-[#0989ff]"
+                      : "border-gray-200"
+                  }`}
+                  key={field.id}
+                  onClick={() => handleActiveInput(field.name || "")}
+                >
+                  {field.icon}
+                  <input
+                    id={field.id}
+                    {...registerInfo(
+                      field.name as keyof InformationFormValues,
+                      {
+                        required: `${field.label} is required`,
+                      }
+                    )}
+                    type={field.type}
+                    className="w-full p-2 focus:outline-none bg-transparent"
+                    aria-label={field.label}
+                  />
+                  {infoErrors[field.name as keyof InformationFormValues] && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {
+                        infoErrors[field.name as keyof InformationFormValues]
+                          ?.message
+                      }
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
+          <div className="pt-4">
+            <button
+              type="submit"
+              className="px-4 py-3 bg-[#010F1C] text-white hover:bg-white hover:text-black border border-gray-800 transition w-full sm:w-auto cursor-pointer"
+              aria-label="Update Profile"
+            >
+              Update Profile
+            </button>
+          </div>
+        </form>
+      </div>
+    ),
+    Address: <div className="p-5">Address</div>,
+    "My Orders": <div className="p-5">My Orders</div>,
+    Notification: <div className="p-5">Notification</div>,
+    "Change Password": (
+      <div className="p-5">
+        <div className="flex flex-col border border-gray-200 p-7 shadow-2xl bg-white">
+          <h2 className="text-2xl font-semibold mb-6">Change Password</h2>
+          <form
+            onSubmit={handlePasswordSubmit(async (data) => {
+              const result = await handleChangePasswordSubmit(data);
+              if (result) {
+                // Store form data for OTP confirmation
+                (window as any).__formData = result.data;
+              }
+            })}
+          >
+            {ChangePasswordInput.map((row) => (
+              <div
+                key={row.id}
+                className={`grid gap-4 mb-4 ${
+                  row.fields.length === 3
+                    ? "grid-cols-1 md:grid-cols-3"
+                    : row.fields.length === 2
+                    ? "grid-cols-1 md:grid-cols-2"
+                    : "grid-cols-1"
+                }`}
+              >
+                {row.fields.map((field) => (
+                  <div
+                    className="relative z-0 w-full mb-6 group"
+                    key={field.id}
+                  >
+                    <input
+                      id={field.id}
+                      className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none 
+                        focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                      {...register(
+                        field.name as keyof FormValues,
+                        field.validations
+                      )}
+                      type={field.type}
+                      placeholder=" "
+                      aria-label={field.label}
+                    />
+                    <label
+                      htmlFor={field.id}
+                      className="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] 
+                        peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 
+                        peer-focus:scale-75 peer-focus:-translate-y-6"
+                    >
+                      {field.label}
+                    </label>
+                    {passwordErrors[field.name as keyof FormValues] && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {
+                          passwordErrors[field.name as keyof FormValues]
+                            ?.message
+                        }
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+            <div className="pt-4">
+              <button
+                type="submit"
+                className="px-4 py-3 bg-[#010F1C] text-white hover:bg-white hover:text-black border border-gray-800 transition w-full sm:w-auto cursor-pointer"
+                aria-label="Update Password"
+              >
+                Update
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    ),
+  } as Record<string, JSX.Element>;
+
   return (
     <>
-      {/* Back to Home button */}
-      <BackToHome textColor="text-black" backTo=""/>
+      <div className="sticky top-0 z-50 bg-white w-full shadow-md">
+        <SubHeader />
+      </div>
 
-      {/* Modal upload */}
-      <ModalUpload
-        isOpen={isModalUploadOpen}
-        onClose={() => setIsModalUploadOpen(false)}
-      />
-
-      {/* Modal */}
       <Modal
         isOpen={isModalOpen}
         name="Confirm Your Identity"
@@ -202,231 +566,47 @@ export default function Profile() {
         cancelButton={true}
         placeHolder="Your OTP code"
         description="Please enter the verification code to confirm your profile changes."
-        onConfirm={handleModalConfirm}
+        onConfirm={(otpValue) =>
+          handleModalConfirm(otpValue, (window as any).__formData)
+        }
         onCancel={handleModalCancel}
       />
 
-      {/* Profile section */}
-      <section className="bg-gray-100">
-        <div className="p-5 container mx-auto">
-          <div className="bg-white border border-gray-50 rounded-md shadow-md p-5 min-h-[15rem] w-full">
-            <div className="flex flex-col items-center justify-center">
-              <div
-                className="group relative cursor-pointer"
-                onClick={handleModalUpload}
-              >
-                <img
-                  src={`${formData?.personal.profilePicture}`}
-                  className="border rounded-full h-28 w-28 relative group-hover:opacity-100"
-                  alt="profile picture"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="border rounded-full h-28 w-28 absolute top-0 left-0 opacity-0 bg-black flex items-center justify-center transition-opacity duration-300 group-hover:opacity-50">
-                  <span className="z-50 text-white">Upload avatar</span>
-                </div>
-              </div>
+      <ModalUpload
+        isOpen={isModalUploadOpen}
+        onClose={() => setIsModalUploadOpen(false)}
+      />
 
-              <h1 className="text-2xl font-semibold text-gray-900 p-2">
-                {`${formData?.personal.firstName} ${formData?.personal.lastName}`}
-              </h1>
-              <h3 className="text-xl text-gray-500">
-                {formData?.personal.email}
-              </h3>
-            </div>
-          </div>
-        </div>
-
-        <form onSubmit={handleUpdateInformation}>
-          {profileInput.map((pi, idx) => (
-            <div className="p-5 container mx-auto" key={idx}>
-              <div className="bg-white border border-gray-50 rounded-md shadow-md p-5 min-h-[20rem] w-full">
-                <h1 className="text-2xl font-bold text-gray-900">{pi.label}</h1>
-                <div className="py-5 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {pi.fields.map((field, idx) => (
-                    <div key={idx}>
-                      <label
-                        htmlFor={field.label}
-                        className="text-md font-semibold text-gray-900"
-                      >
-                        {field.label}
-                      </label>
-                      <input
-                        type={field.type || "text"}
-                        name={field.name}
-                        disabled={field.isDisable}
-                        className={`px-3 py-2 border focus:outline-none focus:ring-1 rounded-md w-full ${
-                          field.isDisable
-                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                            : ""
-                        }`}
-                        defaultValue={field.value}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          handleChange(
-                            pi.section as keyof profile,
-                            field.name ?? "",
-                            e.target.value
-                          )
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
-                {/* Save changes button */}
-                <div className="flex justify-end">
-                  <button
-                    className="px-3 py-2 rounded-md bg-black text-white hover:bg-indigo-500 hover:text-white transition-colors duration-200 cursor-pointer shadow-md"
-                    onClick={() => setActionType("updateUser")}
-                  >
-                    Save changes
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </form>
-
-        <div className="p-5 container mx-auto">
-          <div className="bg-white border border-gray-50 rounded-md shadow-md p-5 min-h-[20rem] w-full space-y-3">
-            <div className="flex items-center justify-between">
-              <h1 className="p-2 text-2xl text-gray-900 font-bold">
-                Order History
-              </h1>
-              <a href="#" className="text-md text-gray-900 font-bold underline">
-                View all
-              </a>
-            </div>
-            <div className="p-3 border border-gray-300 bg-white min-h-[5rem] shadow-md rounded-md">
-              <div className="flex justify-between items-center">
-                <div className="p-2">
-                  <h3 className="text-xl text-gray-900 font-semibold">
-                    Order#2305
-                  </h3>
-                  <span className="text-gray-500 ">Placed on Jan 1, 2025</span>
-                </div>
-                <button className="px-3 py-2 border border-gray-300 rounded-md text-black hover:bg-gray-200 text-sm cursor-pointer">
-                  View details
-                </button>
-              </div>
-            </div>
-
-            <div className="p-3 border border-gray-300 bg-white min-h-[5rem] shadow-md rounded-md">
-              <div className="flex justify-between items-center">
-                <div className="p-2">
-                  <h3 className="text-xl text-gray-900 font-semibold">
-                    Order#2305
-                  </h3>
-                  <span className="text-gray-500 ">Placed on Jan 1, 2025</span>
-                </div>
-                <button className="px-3 py-2 border border-gray-300 rounded-md text-black hover:bg-gray-200 text-sm cursor-pointer">
-                  View details
-                </button>
-              </div>
-            </div>
-
-            <div className="p-3 border border-gray-300 bg-white min-h-[5rem] shadow-md rounded-md">
-              <div className="flex justify-between items-center">
-                <div className="p-2">
-                  <h3 className="text-xl text-gray-900 font-semibold">
-                    Order#2305
-                  </h3>
-                  <span className="text-gray-500 ">Placed on Jan 1, 2025</span>
-                </div>
-                <button className="px-3 py-2 border border-gray-300 rounded-md text-black hover:bg-gray-200 text-sm cursor-pointer">
-                  View details
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative p-5 container mx-auto">
-          {/* Lớp phủ luôn hiện nếu là Google user */}
-          {isGoogleLogin && (
-            <div className="absolute inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-20">
-              <div className="bg-white p-5 rounded-md shadow-md">
-                <p className="text-lg font-semibold text-red-600">
-                  You signed in with Google. Password change is not allowed.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Form thay đổi mật khẩu */}
-          <div
-            className={`bg-white border border-gray-50 rounded-md shadow-md p-5 min-h-[20rem] w-full ${
-              isGoogleLogin ? "opacity-50 pointer-events-none" : ""
-            }`}
-          >
-            <h1 className="text-2xl font-bold text-gray-900">Security</h1>
-            <form onSubmit={handleUpdateInformation}>
-              <div className="py-5 space-y-2">
-                {/* Current password */}
-                <div>
-                  <label
-                    htmlFor="currentPassword"
-                    className="text-md font-semibold text-gray-900"
-                  >
-                    Current password
-                  </label>
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    className="px-3 py-2 border focus:outline-none focus:ring-1 rounded-md w-full"
-                    value={password.currentPassword}
-                    onChange={handlePasswordChange}
-                    disabled={isGoogleLogin}
-                  />
-                </div>
-                {/* New password */}
-                <div>
-                  <label
-                    htmlFor="newPassword"
-                    className="text-md font-semibold text-gray-900"
-                  >
-                    New password
-                  </label>
-                  <input
-                    type="password"
-                    name="newPassword"
-                    className="px-3 py-2 border focus:outline-none focus:ring-1 rounded-md w-full"
-                    value={password.newPassword}
-                    onChange={handlePasswordChange}
-                    disabled={isGoogleLogin}
-                  />
-                </div>
-                {/* Confirm password */}
-                <div>
-                  <label
-                    htmlFor="confirmPassword"
-                    className="text-md font-semibold text-gray-900"
-                  >
-                    Confirm password
-                  </label>
-                  <input
-                    type="password"
-                    name="confirmNewPassword"
-                    className="px-3 py-2 border focus:outline-none focus:ring-1 rounded-md w-full"
-                    value={password.confirmNewPassword}
-                    onChange={handlePasswordChange}
-                    disabled={isGoogleLogin}
-                  />
-                </div>
-              </div>
-              {/* Save changes button */}
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="px-3 py-2 rounded-md bg-black text-white hover:bg-indigo-500 transition-colors duration-200 cursor-pointer shadow-md"
-                  disabled={isGoogleLogin}
+      <div className="min-h-screen container mx-auto px-4 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="border border-gray-200 shadow-xl">
+            <ul className="text-base" role="tablist">
+              {ProfileItems.map(({ id, name, icon }) => (
+                <li
+                  key={id}
+                  role="tab"
+                  aria-selected={isActive === name}
+                  onClick={() => handleActiveTab(name)}
+                  className={`${
+                    isActive === name
+                      ? "bg-[#0989ff0f] text-[#0989ff] font-semibold"
+                      : ""
+                  } p-4 cursor-pointer hover:bg-gray-100 transition`}
                 >
-                  Save changes
-                </button>
-              </div>
-            </form>
+                  <div className="flex gap-3 items-center">
+                    {icon}
+                    {name}
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
+
+          <div className="md:col-span-2">{tabContent[isActive]}</div>
         </div>
-      </section>
-      <Toaster />
+      </div>
+
+      <Footer />
     </>
   );
 }

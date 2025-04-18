@@ -52,4 +52,5 @@ export interface ChangePasswordInput {
   name?: string;
   isDisable?: boolean;
   icon?: JSX.Element;
+  validations: any;
 }

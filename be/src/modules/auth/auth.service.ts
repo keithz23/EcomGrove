@@ -313,7 +313,7 @@ export class AuthService {
     changePasswordDto: ChangePasswordDto,
     otp: string,
   ): Promise<DataResponse> {
-    const { currentPassword, newPassword, confirmNewPassword } =
+    const { oldPassword, newPassword, confirmPassword } =
       changePasswordDto;
 
     try {
@@ -363,7 +363,7 @@ export class AuthService {
 
       const isValidPassword = await argon.verify(
         existingUser.password,
-        currentPassword,
+        oldPassword,
       );
       if (!isValidPassword) {
         return {
@@ -381,7 +381,7 @@ export class AuthService {
         };
       }
 
-      if (newPassword !== confirmNewPassword) {
+      if (newPassword !== confirmPassword) {
         return {
           statusCode: 400,
           success: false,

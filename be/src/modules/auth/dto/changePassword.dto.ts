@@ -4,7 +4,7 @@ import { IsString } from "class-validator";
 export class ChangePasswordDto {
     @ApiProperty()
     @IsString()
-    currentPassword: string;
+    oldPassword: string;
 
     @ApiProperty()
     @IsString()
@@ -12,5 +12,5 @@ export class ChangePasswordDto {
 
     @ApiProperty()
     @IsString()
-    confirmNewPassword: string
+    confirmPassword: string
 }
