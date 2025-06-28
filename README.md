@@ -125,7 +125,7 @@ To sync the schema without migration:
 npx prisma db push
 ```
 
-✅ **Verification:** Check PgAdmin or your PostgreSQL client to confirm the database is created correctly.
+**Verification:** Check PgAdmin or your PostgreSQL client to confirm the database is created correctly.
 
 ## Running the Application
 
@@ -167,4 +167,4 @@ http://localhost:8000/api/docs
 
 ---
 
-This README provides clear, structured, and beginner-friendly setup instructions for EcomGrove. 🚀
+This README provides clear, structured, and beginner-friendly setup instructions for EcomGrove.
