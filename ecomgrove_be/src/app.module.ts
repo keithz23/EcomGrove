@@ -18,6 +18,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { UsersModule } from './modules/users/users.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { CartModule } from './modules/cart/cart.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { AdminModule } from './modules/admin/admin.module';
     ReviewsModule,
     RolesModule,
     UsersModule,
+    CartModule,
     AdminModule,
   ],
   providers: [AppService],

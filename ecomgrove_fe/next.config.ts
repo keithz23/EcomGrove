@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
       "images.unsplash.com",
       "shofy-svelte.vercel.app",
       "vn4u.vn",
+      "picsum.photos",
+      "loremflickr.com",
     ],
   },
 };

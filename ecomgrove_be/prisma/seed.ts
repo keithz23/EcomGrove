@@ -29,12 +29,17 @@ const actions = ['create', 'read', 'update', 'delete'];
 
 const permissionGroupDefs = [
   { name: 'User Management', resources: ['user'] },
-  { name: 'Product Management', resources: ['product', 'inventory', 'category'] },
+  {
+    name: 'Product Management',
+    resources: ['product', 'inventory', 'category'],
+  },
   { name: 'Order Management', resources: ['order'] },
   { name: 'Discounts & Marketing', resources: ['discount'] },
   { name: 'Reports', resources: ['report'] },
   { name: 'Tickets', resources: ['ticket'] },
 ];
+
+const categoryNames = ['Electronics', 'Books', 'Clothing', 'Furniture', 'Toys'];
 
 async function seedRoles() {
   const roleMap = new Map<string, { id: string }>();
@@ -49,10 +54,8 @@ async function seedRoles() {
   return roleMap;
 }
 
-// ==== TẠO PERMISSION GROUP ==== //
 async function seedPermissionGroups() {
   const groupMap = new Map<string, { id: string }>();
-
   for (const def of permissionGroupDefs) {
     const group = await prisma.permissionGroup.upsert({
       where: { name: def.name },
@@ -66,7 +69,6 @@ async function seedPermissionGroups() {
       groupMap.set(res, group);
     }
   }
-
   return groupMap;
 }
 
@@ -78,7 +80,7 @@ async function seedPermissions(groupMap: Map<string, { id: string }>) {
       resource,
       action,
       groupId: groupMap.get(resource)?.id ?? null,
-    }))
+    })),
   );
 
   return await Promise.all(
@@ -87,8 +89,8 @@ async function seedPermissions(groupMap: Map<string, { id: string }>) {
         where: { name: perm.name },
         update: {},
         create: perm,
-      })
-    )
+      }),
+    ),
   );
 }
 
@@ -98,28 +100,37 @@ function getPermissionsForRole(role: string, permissions: any[]) {
       return permissions;
     case 'seller':
       return permissions.filter(
-        (p) => ['product', 'order', 'inventory'].includes(p.resource) && p.action !== 'delete'
+        (p) =>
+          ['product', 'order', 'inventory'].includes(p.resource) &&
+          p.action !== 'delete',
       );
     case 'customer':
       return permissions.filter(
-        (p) => ['product', 'order'].includes(p.resource) && p.action === 'read'
+        (p) => ['product', 'order'].includes(p.resource) && p.action === 'read',
       );
     case 'manager':
       return permissions.filter((p) =>
-        ['product', 'order', 'inventory', 'user'].includes(p.resource)
+        ['product', 'order', 'inventory', 'user'].includes(p.resource),
       );
     case 'support':
       return permissions.filter((p) => ['ticket'].includes(p.resource));
     case 'marketing':
-      return permissions.filter((p) => ['discount', 'category'].includes(p.resource));
+      return permissions.filter((p) =>
+        ['discount', 'category'].includes(p.resource),
+      );
     case 'accountant':
-      return permissions.filter((p) => ['report', 'order'].includes(p.resource));
+      return permissions.filter((p) =>
+        ['report', 'order'].includes(p.resource),
+      );
     default:
       return [];
   }
 }
 
-async function assignPermissionsToRoles(roleMap: Map<string, { id: string }>, permissions: any[]) {
+async function assignPermissionsToRoles(
+  roleMap: Map<string, { id: string }>,
+  permissions: any[],
+) {
   for (const role of roles) {
     const roleEntity = roleMap.get(role.name);
     if (!roleEntity) continue;
@@ -140,13 +151,16 @@ async function assignPermissionsToRoles(roleMap: Map<string, { id: string }>, pe
             roleId: roleEntity.id,
             permissionId: p.id,
           },
-        })
-      )
+        }),
+      ),
     );
   }
 }
 
-async function createAdminUser(roleMap: Map<string, { id: string }>, password: string) {
+async function createAdminUser(
+  roleMap: Map<string, { id: string }>,
+  password: string,
+) {
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
   const existingAdmin = await prisma.user.findUnique({
     where: { email: adminEmail },
@@ -176,13 +190,16 @@ async function createAdminUser(roleMap: Map<string, { id: string }>, password: s
       });
     }
 
-    console.log('✅ Default admin created:', adminEmail);
+    console.log('Default admin created:', adminEmail);
   } else {
-    console.log('ℹ️ Admin already exists:', adminEmail);
+    console.log('Admin already exists:', adminEmail);
   }
 }
 
-async function createFakeUsers(roleMap: Map<string, { id: string }>, password: string) {
+async function createFakeUsers(
+  roleMap: Map<string, { id: string }>,
+  password: string,
+) {
   for (let i = 0; i < 20; i++) {
     const firstName = faker.person.firstName();
     const lastName = faker.person.lastName();
@@ -224,12 +241,55 @@ async function createFakeUsers(roleMap: Map<string, { id: string }>, password: s
     }
   }
 
-  console.log('👥 20 fake users created.');
+  console.log('20 fake users created.');
 }
 
-// ==== RUN ==== //
+async function seedCategories() {
+  for (const name of categoryNames) {
+    await prisma.category.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
+  console.log('Categories seeded.');
+}
+
+async function createFakeProducts() {
+  const categories = await prisma.category.findMany();
+  const users = await prisma.user.findMany();
+
+  if (!categories.length || !users.length) {
+    return;
+  }
+
+  for (let i = 0; i < 50; i++) {
+    const randomCategory =
+      categories[Math.floor(Math.random() * categories.length)];
+    const randomAuthor = users[Math.floor(Math.random() * users.length)];
+
+    await prisma.product.create({
+      data: {
+        name: faker.commerce.productName(),
+        description: faker.commerce.productDescription(),
+        price: parseFloat(faker.commerce.price({ min: 10, max: 500 })),
+        image: faker.image.url(),
+        isActive: faker.datatype.boolean(),
+        categoryId: randomCategory.id,
+        authorId: randomAuthor.id,
+      },
+    });
+  }
+
+  console.log('50 fake products created.');
+}
+
+// ==== RUN ====
 async function main() {
-  const password = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'admin123', 10);
+  const password = await bcrypt.hash(
+    process.env.ADMIN_PASSWORD || 'admin123',
+    10,
+  );
 
   const roleMap = await seedRoles();
   const groupMap = await seedPermissionGroups();
@@ -237,11 +297,13 @@ async function main() {
   await assignPermissionsToRoles(roleMap, permissions);
   await createAdminUser(roleMap, password);
   await createFakeUsers(roleMap, password);
+  await seedCategories();
+  await createFakeProducts();
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Seed failed:', e);
+    console.error('Seed failed:', e);
     process.exit(1);
   })
   .finally(() => prisma.$disconnect());

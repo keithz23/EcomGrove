@@ -1,44 +1,58 @@
 "use client";
 import { ChevronDown, Eye, Heart, ShoppingCart } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  categoriesData,
-  productData,
-  ProductSortingType,
-} from "../constants/ProductData";
+import { categoriesData, ProductSortingType } from "../constants/ProductData";
 import Image from "next/image";
+import useProducts from "../hooks/useProducts";
+import { useCartStore } from "../store/cart/useCartStore";
+import { useAuthStore } from "../store/auth/useAuthStore";
+import { useGuestCartStore } from "../store/cart/useGuestCartStore";
 
 export default function Product() {
-  const [currentPage, setCurrentPage] = useState(1);
   const [openDropdown, setOpenDropDown] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [sortingType, setSortingType] = useState<string>("null");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
   const router = useRouter();
-  // const { productData, total } = useProductData({
-  //   page: currentPage,
-  //   categoryId: activeCategory === "" ? undefined : Number(activeCategory),
-  //   keyword: "",
-  //   sort: sortingType,
-  // });
+  const productRef = useRef<HTMLDivElement | null>(null);
 
-  const handleShowProductDetails = (id: number) => {
-    router.push(`/product/${id}`);
-  };
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  // Dynamic store access
+  const addItem = isAuthenticated
+    ? useCartStore((s) => s.addToCart)
+    : useGuestCartStore((s) => s.addToCart);
+
+  const cart = isAuthenticated
+    ? useCartStore((s) => s.cart)
+    : useGuestCartStore((s) => s.cart);
+
+  const total = isAuthenticated
+    ? useCartStore((s) => s.getTotalPrice())
+    : useGuestCartStore((s) =>
+        s.cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+      );
+
+  const removeFromCart = isAuthenticated
+    ? useCartStore((s) => s.removeFromCart)
+    : useGuestCartStore((s) => s.removeFromCart);
+
+  const {
+    products: productData,
+    totalPages,
+    loading,
+    refetch,
+  } = useProducts(page, limit, "false");
 
   const toggleDropdown = (dropdownKey: string) => {
     setOpenDropDown((prev) => (prev === dropdownKey ? null : dropdownKey));
@@ -46,6 +60,13 @@ export default function Product() {
 
   const handleSelectSortingType = (type: string) => {
     setSortingType(type);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    setTimeout(() => {
+      productRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 0);
   };
 
   return (
@@ -62,10 +83,7 @@ export default function Product() {
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           <ul className="flex flex-wrap gap-3">
             <li
-              onClick={() => {
-                setActiveCategory("");
-                setCurrentPage(1);
-              }}
+              onClick={() => setActiveCategory("")}
               className={`border px-4 py-2 text-sm cursor-pointer transition-all duration-300 ${
                 activeCategory === ""
                   ? "bg-electric-blue text-white shadow-md"
@@ -77,10 +95,7 @@ export default function Product() {
             {categoriesData?.map((item) => (
               <li
                 key={item.id}
-                onClick={() => {
-                  setActiveCategory(String(item.id));
-                  setCurrentPage(1);
-                }}
+                onClick={() => setActiveCategory(String(item.id))}
                 className={`border px-4 py-2 text-sm cursor-pointer transition-all duration-300 ${
                   activeCategory === String(item.id)
                     ? "bg-electric-blue text-white shadow-md"
@@ -97,9 +112,7 @@ export default function Product() {
             <div>
               <div
                 className="relative px-5 py-3 bg-gray-100 border border-gray-200 shadow-sm cursor-pointer min-w-42"
-                onClick={() => {
-                  toggleDropdown("sorting");
-                }}
+                onClick={() => toggleDropdown("sorting")}
               >
                 <div className="flex justify-between">
                   <h1 className="text-sm text-gray-900">
@@ -114,7 +127,6 @@ export default function Product() {
                   />
                 </div>
 
-                {/* Sorting dropdown */}
                 <ul
                   className={`absolute bg-white mt-3.5 left-0 w-full z-50 border border-gray-200 origin-top transition-transform duration-300 ease-out
                     ${
@@ -129,9 +141,7 @@ export default function Product() {
                       className={`text-left px-4 py-2 text-sm ${
                         sortingType == pt.lowerName ? "font-bold" : ""
                       }`}
-                      onClick={() => {
-                        handleSelectSortingType(pt.lowerName);
-                      }}
+                      onClick={() => handleSelectSortingType(pt.lowerName)}
                     >
                       {pt.name}
                     </li>
@@ -144,7 +154,10 @@ export default function Product() {
       </div>
 
       {/* Product Grid */}
-      <section className="grid grid-cols-1 gap-6 cursor-pointer sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-8">
+      <section
+        ref={productRef}
+        className="grid grid-cols-1 gap-6 cursor-pointer sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-8"
+      >
         {productData?.map((item) => (
           <div
             key={item.id}
@@ -152,7 +165,7 @@ export default function Product() {
           >
             <div className="relative w-full aspect-[2/3]">
               <Image
-                src={item.imagePath?.[0]?.url || ""}
+                src={item.image}
                 alt={item.name}
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-105 rounded-t"
@@ -161,7 +174,7 @@ export default function Product() {
             </div>
             <div className="p-5 border-t-2">
               <span className="block mb-2 text-sm text-mid-night font-semibold line-clamp-2">
-                {item.categories}
+                {item.category.name}
               </span>
               <span className="block mb-2 text-md text-mid-night font-semibold line-clamp-2">
                 {item.name}
@@ -180,7 +193,20 @@ export default function Product() {
                 <Eye className="w-5 h-5 hover:text-blue-400 transition" />
               </div>
               <div className="relative group">
-                <ShoppingCart className="w-5 h-5 hover:text-green-400 transition" />
+                <button
+                  onClick={() =>
+                    addItem({
+                      id: item.id,
+                      name: item.name,
+                      price: item.price,
+                      stock: item.stock,
+                      image: item.image,
+                      quantity: 1,
+                    })
+                  }
+                >
+                  <ShoppingCart className="w-5 h-5 hover:text-green-400 transition cursor-pointer" />
+                </button>
               </div>
             </div>
           </div>
@@ -188,39 +214,50 @@ export default function Product() {
       </section>
 
       {/* Pagination */}
-      {/* {productData.length > 0 && (
-        <div className="flex justify-center mt-8">
-          <Pagination
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-            totalPages={Number(total.totalPages)}
-          />
-        </div>
-      )} */}
-      <Pagination className="mt-10">
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious href="#" />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">1</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#" isActive>
-              2
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">3</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationEllipsis />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext href="#" />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      {totalPages > 1 && (
+        <Pagination className="mt-10">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (page > 1) handlePageChange(page - 1);
+                }}
+                className={page === 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  href="#"
+                  isActive={page === i + 1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(i + 1);
+                  }}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (page < totalPages) handlePageChange(page + 1);
+                }}
+                className={
+                  page === totalPages ? "pointer-events-none opacity-50" : ""
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 }

@@ -6,6 +6,8 @@ import { ConfigService } from '@nestjs/config';
 import { RolesService } from '../roles/roles.service';
 import { JwtStrategy } from '../auth/strategies/jwt.strategy';
 import { PermissionsService } from '../permissions/permissions.service';
+import { ProductsService } from '../products/products.service';
+import { CategoriesService } from '../categories/categories.service';
 
 @Module({
   controllers: [AdminController],
@@ -15,6 +17,8 @@ import { PermissionsService } from '../permissions/permissions.service';
     ConfigService,
     RolesService,
     PermissionsService,
+    ProductsService,
+    CategoriesService,
     JwtStrategy,
   ],
 })
