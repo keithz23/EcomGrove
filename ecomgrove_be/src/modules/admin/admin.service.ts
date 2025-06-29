@@ -19,6 +19,10 @@ import { AssignPermissionDto } from './dto/permissions/permissions.dto';
 import { CreateProductDto } from './dto/products/create-product.dto';
 import { UpdateProductDto } from './dto/products/update-product.dto';
 import { Prisma } from '@prisma/client';
+import { ProductsService } from '../products/products.service';
+import { CreateCategoryDto } from '../categories/dto/create-category.dto';
+import { UpdateCategoryDto } from '../categories/dto/update-category.dto';
+import { CategoriesService } from '../categories/categories.service';
 
 @Injectable()
 export class AdminService {
@@ -26,6 +30,8 @@ export class AdminService {
     private readonly usersService: UsersService,
     private readonly rolesService: RolesService,
     private readonly permissionsService: PermissionsService,
+    private readonly productsService: ProductsService,
+    private readonly categoriesService: CategoriesService,
     private prisma: PrismaService,
     private configService: ConfigService,
   ) {}
@@ -425,5 +431,100 @@ export class AdminService {
         'An unexpected error occurred while deleting product',
       );
     }
+  }
+
+  async findAllProducts(page, limit, all) {
+    return this.productsService.findAllProduct(page, limit, all);
+  }
+
+  async findOneProduct(id) {
+    return this.productsService.findOneProduct(id);
+  }
+
+  // Categories
+  async createCategories(createCategoriesDto: CreateCategoryDto) {
+    const { name, description } = createCategoriesDto;
+    try {
+      const existingCategoryName = await this.prisma.category.findFirst({
+        where: { name },
+      });
+
+      if (existingCategoryName)
+        throw new BadRequestException('Category name already exists');
+
+      const category = await this.prisma.category.create({
+        data: {
+          name,
+          description,
+        },
+      });
+
+      return category;
+    } catch (error) {
+      console.error('Error while creating category:', error);
+      if (error instanceof BadRequestException) throw error;
+      throw new InternalServerErrorException(
+        'An unexpected error occured while creating category',
+      );
+    }
+  }
+
+  async updateCategory(updateCategoryDto: UpdateCategoryDto) {
+    const { id, name, description } = updateCategoryDto;
+    try {
+      const existingCategory = await this.prisma.category.findFirst({
+        where: { id },
+      });
+
+      if (!existingCategory) {
+        throw new NotFoundException(`Category with id ${id} not found`);
+      }
+
+      const category = await this.prisma.category.update({
+        where: { id },
+        data: {
+          name,
+          description,
+        },
+      });
+
+      return category;
+    } catch (error) {
+      console.error('Error while updating category:', error);
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'An unexpected error occured while updating category',
+      );
+    }
+  }
+
+  async deleteCategory(id: string) {
+    try {
+      const existingCategory = await this.prisma.category.findFirst({
+        where: { id },
+      });
+
+      if (!existingCategory) {
+        throw new NotFoundException(`Category with id ${id} not found`);
+      }
+
+      await this.prisma.category.delete({
+        where: { id },
+      });
+    } catch (error) {
+      console.error('Error while deleting category:', error);
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'An unexptecd error occured while deleting category',
+      );
+    }
+  }
+
+  async findAllCategories(page, limit, all) {
+    return this.categoriesService.findAllCategories(page, limit, all);
+  }
+
+  async findOneCategory(id) {
+    return this.categoriesService.findOneCategory(id);
   }
 }

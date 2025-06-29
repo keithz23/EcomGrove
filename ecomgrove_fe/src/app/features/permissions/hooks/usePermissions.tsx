@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { getErrorMessage } from "@/app/utils/getMessageError.util";
 import { IPermissions } from "../types/permissions.interface";
 import { permissionsService } from "@/app/services/admin/permissions.service";
-import { IPermissionGroup } from "../types/permission-group.interface";
 
 export default function usePermissions(
   page: number,
@@ -10,9 +9,6 @@ export default function usePermissions(
   all: string
 ) {
   const [permissions, setPermissions] = useState<IPermissions[]>([]);
-  const [permissionGroup, setPermissionGroup] = useState<IPermissionGroup[]>(
-    []
-  );
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +19,6 @@ export default function usePermissions(
     try {
       const res = await permissionsService.findAllPermissions(page, limit, all);
       const resData = res.data;
-      console.log(res.data);
       setPermissions(resData.data);
       setTotalPages(resData.totalPages);
     } catch (error) {

@@ -104,7 +104,10 @@ export class PermissionsService {
       return permission;
     } catch (error) {
       console.error('Error while fetching permission data:', error);
-      throw new InternalServerErrorException();
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'An unexpected error occured while fetching permission data',
+      );
     }
   }
 
@@ -147,8 +150,9 @@ export class PermissionsService {
       };
     } catch (error) {
       console.error('Error while fetching permissions group data:', error);
+      if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(
-        'Error while fetching permission group data',
+        'An unexpected error occured while fetching all permissions data',
       );
     }
   }

@@ -31,6 +31,8 @@ import { CombinedAuthGuard } from '../auth/guards/combined.guard';
 import { AssignPermissionDto } from './dto/permissions/permissions.dto';
 import { CreateProductDto } from './dto/products/create-product.dto';
 import { UpdateProductDto } from './dto/products/update-product.dto';
+import { CreateCategoryDto } from '../categories/dto/create-category.dto';
+import { UpdateCategoryDto } from '../categories/dto/update-category.dto';
 
 @Controller('admin')
 export class AdminController {
@@ -127,6 +129,8 @@ export class AdminController {
   }
 
   @Get('roles')
+  @UseGuards(CombinedAuthGuard)
+  @Permissions('user:create')
   async findAllRoles(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
@@ -188,7 +192,6 @@ export class AdminController {
     @Req() req: Request,
   ) {
     const user = (req as any).user.sub;
-    console.log(user);
     let uploadedImageUrl: string | undefined;
     if (!files || !files.picture || files.picture.length === 0) {
       throw new BadRequestException('Image file is required');
@@ -233,5 +236,65 @@ export class AdminController {
   @Permissions('product:delete')
   async deleteProduct(@Param('id') id: string) {
     return this.adminService.deleteProduct(id);
+  }
+
+  @Get('product')
+  @UseGuards(CombinedAuthGuard)
+  @Permissions('product:read')
+  async findAllProducts(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('all') all: string = 'false',
+  ) {
+    const isAll = all === 'true';
+    return this.adminService.findAllProducts(+page, +limit, isAll);
+  }
+
+  @Get('product/:id')
+  @UseGuards(CombinedAuthGuard)
+  @Permissions('product:read', 'product:create')
+  async findOneProduct(@Param('id') id: string) {
+    return this.adminService.findOneProduct(id);
+  }
+
+  // Categories
+  @Post('categories/create-category')
+  @UseGuards(CombinedAuthGuard)
+  @Permissions('category:create')
+  async createCategory(@Body() createCategoryDto: CreateCategoryDto) {
+    return this.adminService.createCategories(createCategoryDto);
+  }
+
+  @Patch('categories/update-category')
+  @UseGuards(CombinedAuthGuard)
+  @Permissions('category:update')
+  async updateCategory(@Body() updateCategoryDto: UpdateCategoryDto) {
+    return this.adminService.updateCategory(updateCategoryDto);
+  }
+
+  @Get('categories')
+  @UseGuards(CombinedAuthGuard)
+  @Permissions('category:read')
+  async findAllCategories(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('all') all: string = 'false',
+  ) {
+    const isAll = all === 'true';
+    return this.adminService.findAllCategories(+page, +limit, isAll);
+  }
+
+  @Delete('categories/:id')
+  @UseGuards(CombinedAuthGuard)
+  @Permissions('category:delete')
+  async deleteCategory(@Param('id') id: string) {
+    return this.adminService.deleteCategory(id);
+  }
+
+  @Get('categories/:id')
+  @UseGuards(CombinedAuthGuard)
+  @Permissions('category:read')
+  async findOneCategory(@Param('id') id: string) {
+    return this.adminService.findOneCategory(id);
   }
 }

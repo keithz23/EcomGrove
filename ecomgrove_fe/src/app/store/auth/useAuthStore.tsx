@@ -59,7 +59,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const user = response.data.user;
       const accessToken = response.data.accessToken;
       const isAdmin = user.roles.includes("admin");
-      console.log(response)
+      console.log(response);
 
       set({
         user,
