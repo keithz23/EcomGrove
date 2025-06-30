@@ -3,5 +3,6 @@ export enum ECartService {
   ADD_TO_CART = "",
   UPDATE_CART = "",
   SYNC_CART = "sync",
-  DELETE_CART = "",
+  REMOVE_FROM_CART = "remove-from-cart",
+  CLEAR_CART = "clear-cart",
 }

@@ -173,27 +173,80 @@ export class CartService {
     }
   }
 
-  async removeCartItem(cartItemId: string) {
-    return this.prisma.$transaction(async (prisma) => {
-      const cartItem = await prisma.cart.findUnique({
-        where: { id: cartItemId },
-      });
+  async removeFromCart(cartItemId: string, userId: string) {
+    try {
+      return await this.prisma.$transaction(async (prisma) => {
+        const cartItem = await prisma.cart.findFirst({
+          where: { userId, productId: cartItemId },
+        });
 
-      if (!cartItem) throw new NotFoundException('Cart item not found');
+        if (!cartItem) {
+          throw new NotFoundException('Cart item not found');
+        }
 
-      const cartData = await prisma.cart.delete({ where: { id: cartItemId } });
+        await prisma.cart.delete({
+          where: { id: cartItem.id },
+        });
 
-      await prisma.product.update({
-        where: { id: cartItem.productId },
-        data: {
-          stock: {
-            increment: cartItem.quantity,
+        await prisma.product.update({
+          where: { id: cartItemId },
+          data: {
+            stock: {
+              increment: cartItem.quantity,
+            },
           },
-        },
-      });
+        });
 
-      return cartData;
-    });
+        return { message: 'Item removed from cart' };
+      });
+    } catch (error) {
+      console.error('Error while removing from cart:', error);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'An unexpected error occurred while removing item from cart',
+      );
+    }
+  }
+
+  async clearCart(userId: string) {
+    try {
+      return await this.prisma.$transaction(async (prisma) => {
+        const cartItems = await prisma.cart.findMany({
+          where: { userId },
+        });
+
+        if (cartItems.length === 0) {
+          throw new NotFoundException('No items found in cart');
+        }
+
+        for (const item of cartItems) {
+          await prisma.product.update({
+            where: { id: item.productId },
+            data: {
+              stock: {
+                increment: item.quantity,
+              },
+            },
+          });
+        }
+
+        await prisma.cart.deleteMany({
+          where: { userId },
+        });
+
+        return { message: 'Cart cleared successfully' };
+      });
+    } catch (error) {
+      console.error('Error while clearing cart:', error);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'An unexpected error occurred while clearing cart',
+      );
+    }
   }
 
   async syncCartFromLocal(items: AddToCartDto[], userId: string) {

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Jost } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "react-hot-toast";
+import { AuthProvider } from "@/components/providers/AuthProvider";
 
 const geistJost = Jost({
   subsets: ["latin"],
@@ -30,7 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistJost.className} antialiased`}>{children}</body>
+      <body className={`${geistJost.className} antialiased`}>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

@@ -17,13 +17,10 @@ export default function Cart({
   isOpen: boolean;
 }) {
   const [mounted, setMounted] = useState(false);
+  const fetchCart = useCartStore((s) => s.fetchCart);
+  const cartData = useCartStore((s) => s.cart);
   const router = useRouter();
-
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-
-  const cart = isAuthenticated
-    ? useCartStore((s) => s.cart)
-    : useGuestCartStore((s) => s.cart);
 
   const total = isAuthenticated
     ? useCartStore((s) => s.getTotalPrice())
@@ -31,15 +28,6 @@ export default function Cart({
         s.cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
       );
 
-  const removeFromCart = isAuthenticated
-    ? useCartStore((s) => s.removeFromCart)
-    : useGuestCartStore((s) => s.removeFromCart);
-
-  const syncGuestCartToServer = useCartStore((s) => s.syncGuestCartToServer);
-  const loadCartFromServer = useCartStore((s) => s.loadCartFromServer);
-
-  const guestCart = useGuestCartStore((s) => s.cart);
-  const clearGuestCart = useGuestCartStore((s) => s.clearGuestCart);
   const removeGuestItem = useGuestCartStore((s) => s.removeFromCart);
   const removeItem = useCartStore((s) => s.removeFromCart);
 
@@ -48,14 +36,10 @@ export default function Cart({
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated || guestCart.length === 0) return;
-
-    (async () => {
-      await syncGuestCartToServer(guestCart);
-      clearGuestCart();
-      await loadCartFromServer();
-    })();
-  }, [isAuthenticated]);
+    if (isAuthenticated) {
+      fetchCart();
+    }
+  }, [fetchCart]);
 
   if (!mounted) return null;
 
@@ -85,18 +69,17 @@ export default function Cart({
           />
         </div>
 
-        {/* Divider */}
         <div className="border-t"></div>
 
         {/* Cart body */}
         <div className="flex flex-col h-full py-5">
           <div className="flex-1 overflow-y-auto pr-2 space-y-3">
-            {cart.length === 0 ? (
+            {!cartData || cartData.length === 0 ? (
               <p className="text-sm text-gray-500 text-center mt-10">
                 Your cart is empty.
               </p>
             ) : (
-              cart.map((item) => (
+              cartData.map((item) => (
                 <div key={item.id}>
                   <div className="flex items-center gap-x-3">
                     <Image
@@ -106,7 +89,6 @@ export default function Cart({
                       width={64}
                       height={64}
                     />
-
                     <div className="flex-1 cursor-pointer">
                       <div className="flex justify-between">
                         <h3 className="font-medium text-mid-night hover:text-electric-blue transition-all duration-300">

@@ -22,7 +22,7 @@ export default function Product() {
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [sortingType, setSortingType] = useState<string>("null");
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit] = useState(12);
   const router = useRouter();
   const productRef = useRef<HTMLDivElement | null>(null);
 

@@ -12,9 +12,6 @@ export class ProductsController {
     @Query('all') all: string,
   ) {
     const isAll = all === 'true';
-    console.log(page);
-    console.log(limit);
-    console.log(all);
     return this.productsService.findAllProduct(page, limit, isAll);
   }
 

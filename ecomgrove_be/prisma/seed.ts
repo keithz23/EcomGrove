@@ -275,6 +275,7 @@ async function createFakeProducts() {
         price: parseFloat(faker.commerce.price({ min: 10, max: 500 })),
         image: faker.image.url(),
         isActive: faker.datatype.boolean(),
+        stock: 1000,
         categoryId: randomCategory.id,
         authorId: randomAuthor.id,
       },
