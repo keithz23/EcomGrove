@@ -15,11 +15,11 @@ export default function Cart({
   onClose: () => void;
   isOpen: boolean;
 }) {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const fetchCart = useCartStore((s) => s.fetchCart);
   const cartData = useCartStore((s) => s.cart);
   const guestCartData = useGuestCartStore((s) => s.cart);
-  const router = useRouter();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const total = isAuthenticated

@@ -6,6 +6,7 @@ import { productService } from "../services/public/product.service";
 export default function useProducts(page: number, limit: number, all: string) {
   const [products, setProducts] = useState<IProducts[]>([]);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,6 +17,7 @@ export default function useProducts(page: number, limit: number, all: string) {
     try {
       const res = await productService.findAllProduct(page, limit, all);
       const resData = res.data;
+      setTotalItems(resData.totalItems);
       setProducts(resData.data);
       setTotalPages(resData.totalPages);
     } catch (error) {
@@ -28,5 +30,12 @@ export default function useProducts(page: number, limit: number, all: string) {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
-  return { products, totalPages, loading, error, refetch: fetchProducts };
+  return {
+    products,
+    totalPages,
+    totalItems,
+    loading,
+    error,
+    refetch: fetchProducts,
+  };
 }
