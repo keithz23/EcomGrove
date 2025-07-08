@@ -1,5 +1,4 @@
 "use client";
-
 import { X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Button } from "../ui/button";
@@ -19,6 +18,7 @@ export default function Cart({
   const [mounted, setMounted] = useState(false);
   const fetchCart = useCartStore((s) => s.fetchCart);
   const cartData = useCartStore((s) => s.cart);
+  const guestCartData = useGuestCartStore((s) => s.cart);
   const router = useRouter();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
@@ -74,12 +74,13 @@ export default function Cart({
         {/* Cart body */}
         <div className="flex flex-col h-full py-5">
           <div className="flex-1 overflow-y-auto pr-2 space-y-3">
-            {!cartData || cartData.length === 0 ? (
+            {(!isAuthenticated && guestCartData?.length === 0) ||
+            (isAuthenticated && cartData?.length === 0) ? (
               <p className="text-sm text-gray-500 text-center mt-10">
                 Your cart is empty.
               </p>
             ) : (
-              cartData.map((item) => (
+              (isAuthenticated ? cartData : guestCartData).map((item) => (
                 <div key={item.id}>
                   <div className="flex items-center gap-x-3">
                     <Image
