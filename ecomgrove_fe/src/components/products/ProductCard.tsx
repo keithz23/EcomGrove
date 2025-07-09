@@ -20,12 +20,20 @@ import ProductDetailModal from "./ProductDetailModal";
 type ProductCardProps = {
   layout: "grid" | "list";
   product: IProducts[];
+  currentPage: number;
+  limit: number;
+  totalPages: number;
 };
 
-export default function ProductCard({ layout, product }: ProductCardProps) {
+export default function ProductCard({
+  layout,
+  product,
+  currentPage,
+  limit,
+  totalPages,
+}: ProductCardProps) {
   const router = useRouter();
   const [page, setPage] = useState(1);
-  const [limit] = useState(9);
   const productRef = useRef<HTMLDivElement | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<IProducts | null>(
     null
@@ -37,7 +45,7 @@ export default function ProductCard({ layout, product }: ProductCardProps) {
     ? useCartStore((s) => s.addToCart)
     : useGuestCartStore((s) => s.addToCart);
 
-  const { totalPages } = useProducts(page, limit, "false");
+  // const { totalPages } = useProducts(page, limit, "true");
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);

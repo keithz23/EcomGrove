@@ -1,31 +1,120 @@
 "use client";
-
 import { AlignJustify, ChevronDown, LayoutGrid } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import useProducts from "@/app/hooks/useProducts";
 import { ProductSortingType } from "@/app/constants/ProductData";
 import ProductCard from "./ProductCard";
 import { Toaster } from "react-hot-toast";
 import { Slider } from "../ui/slider";
+import { Button } from "../ui/button";
+import { useRouter, useSearchParams } from "next/navigation";
+import useDropdown from "@/app/hooks/useDropdown";
+import { getUpdatedUrl } from "@/app/utils/urlParams.util";
 
 export default function Products() {
+  const limit = 9;
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { toggle, isOpen } = useDropdown();
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [sortingType, setSortingType] = useState<string>("null");
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [price, setPrice] = useState<number[]>([100]);
+  const [tempPrice, setTempPrice] = useState<number[]>([100]);
+  const [appliedPrice, setAppliedPrice] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
-  const page = 1;
-  const limit = 12;
+  const parsedUrlParams = useMemo(() => {
+    const priceParam = searchParams.get("price");
+    const sortParam = searchParams.get("sort");
 
-  const { products: productData, totalItems } = useProducts(page, limit, "false");
+    return {
+      price: priceParam ? Number(priceParam) : null,
+      sort: sortParam || "null",
+    };
+  }, [searchParams]);
 
-  const toggleDropdown = (dropdownKey: string) => {
-    setOpenDropdown((prev) => (prev === dropdownKey ? null : dropdownKey));
-  };
+  useEffect(() => {
+    const { price: urlPrice, sort: urlSort } = parsedUrlParams;
+
+    if (!isNaN(urlPrice!) && urlPrice !== null && urlPrice !== appliedPrice) {
+      setPrice([urlPrice]);
+      setTempPrice([urlPrice]);
+      setAppliedPrice(urlPrice);
+    }
+
+    if ((urlPrice === null || isNaN(urlPrice)) && appliedPrice !== null) {
+      setPrice([100]);
+      setTempPrice([100]);
+      setAppliedPrice(null);
+    }
+
+    if (urlSort !== sortingType) {
+      setSortingType(urlSort);
+    }
+  }, [parsedUrlParams]);
+
+  const {
+    products: productData,
+    totalItems,
+    totalPages,
+    loading,
+    error,
+  } = useProducts(
+    currentPage,
+    limit,
+    "false",
+    appliedPrice ?? undefined,
+    sortingType
+  );
 
   const handleSelectSortingType = (type: string) => {
     setSortingType(type);
-    setOpenDropdown(null);
+    toggle("sorting");
+
+    const newUrl = getUpdatedUrl(searchParams, {
+      sort: type,
+    });
+
+    router.replace(newUrl);
   };
+
+  const handleFilter = () => {
+    const newPrice = tempPrice[0];
+    if (newPrice !== price[0]) {
+      setPrice([newPrice]);
+      setAppliedPrice(newPrice);
+      setCurrentPage(1);
+
+      const newUrl = getUpdatedUrl(searchParams, {
+        price: newPrice.toString(),
+      });
+
+      router.replace(newUrl);
+    }
+  };
+
+  const handleClearFilter = () => {
+    setPrice([100]);
+    setTempPrice([100]);
+    setAppliedPrice(null);
+    setCurrentPage(1);
+
+    const newUrl = getUpdatedUrl(searchParams, {
+      price: null,
+    });
+
+    router.replace(newUrl);
+  };
+
+  const handleSliderChange = (value: number[]) => {
+    setTempPrice(value);
+  };
+
+  const isFilterApplied = appliedPrice !== null;
+  const hasFilterChanged = tempPrice[0] !== price[0];
+
+  const startItem = (currentPage - 1) * limit + 1;
+  const endItem = Math.min(currentPage * limit, totalItems);
 
   return (
     <>
@@ -36,50 +125,129 @@ export default function Products() {
           </h2>
         </div>
 
-        {/* Grid layout with filter left + product right */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filter Sidebar */}
           <aside className="lg:col-span-1">
-            <p className="text-mid-night font-semibold text-xl my-2">Price Filter</p>
-            <Slider />
+            <div className="bg-white p-6 shadow-sm border">
+              <div className="mb-4">
+                <h3 className="text-mid-night font-semibold text-xl">
+                  Price Filter
+                </h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Price Range</label>
+                  <span className="text-sm text-gray-600">${tempPrice[0]}</span>
+                </div>
+
+                <Slider
+                  value={tempPrice}
+                  max={1000}
+                  min={0}
+                  step={50}
+                  onValueChange={handleSliderChange}
+                  className="w-full"
+                />
+
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>$0</span>
+                  <span>$1000</span>
+                </div>
+
+                <div className="pt-2">
+                  <p className="text-sm text-gray-600 mb-3">
+                    {isFilterApplied ? (
+                      <>
+                        Showing products under <strong>${appliedPrice}</strong>
+                      </>
+                    ) : (
+                      "No price filter applied"
+                    )}
+                  </p>
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="black"
+                      onClick={handleFilter}
+                      className="flex-1"
+                      disabled={!hasFilterChanged}
+                    >
+                      Apply Filter
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </aside>
 
           {/* Product + Controls */}
           <section className="lg:col-span-3 space-y-8">
+            {/* Active Filters */}
+            {isFilterApplied && (
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Active Filters:</span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                      Price: Under ${appliedPrice}
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearFilter}
+                    className="text-xs"
+                  >
+                    Clear All
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Layout & Sorting */}
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              {/* Layout Switcher & Count */}
+            <div className="flex justify-between items-center gap-4">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setLayout("grid")}
-                  className={`p-2 border ${layout === "grid" ? "border-mid-night" : ""}`}
+                  className={`p-2 border transition-colors cursor-pointer ${
+                    layout === "grid"
+                      ? "border-mid-night bg-gray-100"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
                 >
                   <LayoutGrid className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setLayout("list")}
-                  className={`p-2 border ${layout === "list" ? "border-mid-night" : ""}`}
+                  className={`p-2 border transition-colors cursor-pointer ${
+                    layout === "list"
+                      ? "border-mid-night bg-gray-100"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
                 >
                   <AlignJustify className="w-5 h-5" />
                 </button>
-                <p className="text-sm text-gray-600">
-                  Showing 1 - {limit} of {totalItems}
+                <p className="text-sm text-gray-600 ml-2">
+                  Showing {startItem} - {endItem} of {totalItems} products
                 </p>
               </div>
 
               {/* Sorting Dropdown */}
-              <div className="relative w-full md:w-auto">
+              <div className="relative">
                 <div
-                  className="px-5 py-3 bg-gray-100 border border-gray-200 shadow-sm cursor-pointer"
-                  onClick={() => toggleDropdown("sorting")}
+                  className="px-5 py-3 bg-gray-100 border border-gray-200 shadow-sm cursor-pointer min-w-40 transition-colors hover:bg-gray-50"
+                  onClick={() => toggle("sorting")}
                 >
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-center items-center gap-x-3">
                     <span className="text-sm text-gray-900">
-                      {ProductSortingType.find((pt) => pt.lowerName === sortingType)?.name || "Default Sorting"}
+                      {ProductSortingType.find(
+                        (pt) => pt.lowerName === sortingType
+                      )?.name || "Default Sorting"}
                     </span>
                     <ChevronDown
-                      className={`w-5 h-5 ml-2 transition-transform duration-200 ${
-                        openDropdown === "sorting" ? "rotate-180" : ""
+                      className={`w-5 h-5 transition-transform duration-200 ${
+                        isOpen("sorting") ? "rotate-180" : ""
                       }`}
                     />
                   </div>
@@ -87,9 +255,9 @@ export default function Products() {
 
                 {/* Dropdown */}
                 <ul
-                  className={`absolute bg-white mt-2 w-full z-50 border border-gray-200 rounded-md shadow-md transition-all transform origin-top
+                  className={`absolute bg-white mt-2 w-full z-50 border border-gray-200 rounded-md shadow-lg transition-all transform origin-top
                   ${
-                    openDropdown === "sorting"
+                    isOpen("sorting")
                       ? "opacity-100 scale-100"
                       : "opacity-0 scale-95 pointer-events-none"
                   }`}
@@ -97,8 +265,10 @@ export default function Products() {
                   {ProductSortingType.map((pt) => (
                     <li
                       key={pt.id}
-                      className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer ${
-                        sortingType === pt.lowerName ? "font-semibold" : ""
+                      className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${
+                        sortingType === pt.lowerName
+                          ? "font-semibold bg-gray-50"
+                          : ""
                       }`}
                       onClick={() => handleSelectSortingType(pt.lowerName)}
                     >
@@ -110,7 +280,24 @@ export default function Products() {
             </div>
 
             {/* Product Grid/List */}
-            <ProductCard layout={layout} product={productData} />
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                <span className="ml-2">Loading products...</span>
+              </div>
+            ) : error ? (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-600">Error loading products: {error}</p>
+              </div>
+            ) : (
+              <ProductCard
+                layout={layout}
+                product={productData}
+                currentPage={currentPage}
+                limit={limit}
+                totalPages={totalPages}
+              />
+            )}
           </section>
         </div>
       </div>

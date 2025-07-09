@@ -13,6 +13,7 @@ import { getErrorMessage } from "./utils/getMessageError.util";
 import { cartService } from "./services/public/cart.service";
 import CartSyncModal from "@/components/modal/Modal";
 import Products from "@/components/products/Products";
+import HomeProductPreview from "@/components/products/HomeProductPreview";
 
 export default function Home() {
   const { isAuthenticated } = useAuthStore();
@@ -88,7 +89,7 @@ export default function Home() {
       <AdSection />
       <TrendingProduct />
       <Deal />
-      <Products />
+      <HomeProductPreview />
       <Subscribe />
       <Footer />
 

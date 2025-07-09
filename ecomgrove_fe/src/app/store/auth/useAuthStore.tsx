@@ -1,4 +1,3 @@
-// stores/authStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import toast from "react-hot-toast";
@@ -12,6 +11,7 @@ interface AuthState {
   isLoading: boolean;
   hasCheckedAuth: boolean;
   user: User | null;
+  isAdmin: boolean;
 
   signup: (formData: IUserSignup) => Promise<AuthResponse | void>;
   login: (email: string, password: string) => Promise<AuthResponse | void>;
@@ -26,6 +26,7 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       hasCheckedAuth: false,
       user: null,
+      isAdmin: false,
 
       signup: async (formData) => {
         set({ isLoading: true });
@@ -52,6 +53,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             user: response.data.user,
             isLoading: false,
+            isAdmin: response.data.user.roles.includes("admin"),
           });
           toast.success("Login successful");
           return response.data as AuthResponse;
