@@ -13,7 +13,6 @@ import {
 import { useAuthStore } from "@/app/store/auth/useAuthStore";
 import { useCartStore } from "@/app/store/cart/useCartStore";
 import { useGuestCartStore } from "@/app/store/cart/useGuestCartStore";
-import useProducts from "@/app/hooks/useProducts";
 import { useRouter } from "next/navigation";
 import ProductDetailModal from "./ProductDetailModal";
 
@@ -44,8 +43,6 @@ export default function ProductCard({
   const addItem = isAuthenticated
     ? useCartStore((s) => s.addToCart)
     : useGuestCartStore((s) => s.addToCart);
-
-  // const { totalPages } = useProducts(page, limit, "true");
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);

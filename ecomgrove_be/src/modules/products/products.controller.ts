@@ -10,6 +10,7 @@ export class ProductsController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
     @Query('all') all: string,
+    @Query('categories') categories?: string,
     @Query('price') price?: number,
     @Query('sort') sort?: string,
   ) {
@@ -24,6 +25,7 @@ export class ProductsController {
       isAll,
       sort,
       hasPrice ? priceNumber : undefined,
+      categories,
     );
   }
 

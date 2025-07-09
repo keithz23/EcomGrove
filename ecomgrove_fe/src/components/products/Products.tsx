@@ -10,6 +10,7 @@ import { Button } from "../ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import useDropdown from "@/app/hooks/useDropdown";
 import { getUpdatedUrl } from "@/app/utils/urlParams.util";
+import useCategory from "@/app/features/categories/hooks/useCategory";
 
 export default function Products() {
   const limit = 9;
@@ -66,6 +67,9 @@ export default function Products() {
     appliedPrice ?? undefined,
     sortingType
   );
+
+  const { categories: categoryData } = useCategory(1, 10, "false");
+  console.log(categoryData);
 
   const handleSelectSortingType = (type: string) => {
     setSortingType(type);
@@ -176,6 +180,29 @@ export default function Products() {
                       Apply Filter
                     </Button>
                   </div>
+                </div>
+
+                {/* Categories filter */}
+                <div className="my-5">
+                  <h3 className="text-xl text-mid-night font-semibold">
+                    Categories
+                  </h3>
+
+                  <ul className="space-y-2 mt-3 list-disc max-h-32 overflow-y-auto">
+                    {categoryData.map((item) => (
+                      <li
+                        className="flex items-center justify-between group cursor-pointer"
+                        key={item.id}
+                      >
+                        <p className="group-hover:text-electric-blue">
+                          {item.name}
+                        </p>
+                        <p className="group-hover:bg-electric-blue group-hover:text-white border px-2 rounded-md transition-all duration-300">
+                          3
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             </div>

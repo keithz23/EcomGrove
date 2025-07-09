@@ -17,20 +17,28 @@ export class ProductsService {
     all: boolean,
     sort: string,
     price?: number,
+    categories?: string,
   ) {
     const safePage = Math.max(1, page);
     const safeLimit = Math.min(Math.max(1, limit), 100);
     const skip = (safePage - 1) * safeLimit;
 
-    console.log(sort)
-
+    // Build dynamic filters
     const where: any = {};
     if (typeof price === 'number') {
       where.price = { lt: price };
     }
+    if (categories) {
+      where.category = {
+        name: {
+          equals: categories,
+          mode: 'insensitive',
+        },
+      };
+    }
 
+    // Sorting
     let orderBy: any = {};
-
     switch (sort) {
       case 'high-to-low':
         orderBy = { price: 'desc' };
@@ -43,7 +51,6 @@ export class ProductsService {
         break;
       default:
         orderBy = {};
-        break;
     }
 
     try {
