@@ -1,4 +1,3 @@
-import { useAuthStore } from "@/app/store/auth/useAuthStore";
 import axios from "axios";
 
 const API =
@@ -9,10 +8,4 @@ const API =
 export const instance = axios.create({
   baseURL: API,
   withCredentials: true,
-});
-
-instance.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken;
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
 });

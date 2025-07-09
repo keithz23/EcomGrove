@@ -10,9 +10,23 @@ export class ProductsController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
     @Query('all') all: string,
+    @Query('categories') categories?: string,
+    @Query('price') price?: number,
+    @Query('sort') sort?: string,
   ) {
     const isAll = all === 'true';
-    return this.productsService.findAllProduct(page, limit, isAll);
+    const priceNumber = Number(price);
+
+    const hasPrice = !isNaN(priceNumber);
+
+    return this.productsService.findAllProduct(
+      page,
+      limit,
+      isAll,
+      sort,
+      hasPrice ? priceNumber : undefined,
+      categories,
+    );
   }
 
   @Get(':id')

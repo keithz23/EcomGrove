@@ -14,10 +14,7 @@ import { useAuthStore } from "../store/auth/useAuthStore";
 
 export default function Contact() {
   const { isScrolledY } = useWindowEvents();
-  const checkAuth = useAuthStore((state) => state.checkAuth);
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+
   const {
     register,
     handleSubmit,

@@ -1,7 +1,6 @@
 "use client";
 import Footer from "@/components/Footer/Footer";
 import { Header } from "@/components/Header/Header";
-import Product from "./product/page";
 import Banner from "@/components/common/Banner";
 import AdSection from "@/components/common/AdSection";
 import Subscribe from "@/components/common/Subscribe";
@@ -13,6 +12,8 @@ import { useEffect, useState } from "react";
 import { getErrorMessage } from "./utils/getMessageError.util";
 import { cartService } from "./services/public/cart.service";
 import CartSyncModal from "@/components/modal/Modal";
+import Products from "@/components/products/Products";
+import HomeProductPreview from "@/components/products/HomeProductPreview";
 
 export default function Home() {
   const { isAuthenticated } = useAuthStore();
@@ -57,13 +58,14 @@ export default function Home() {
 
     const payload = cartItems.map((item: any) => ({
       productId: item.id,
-      quantity: item.quantity ?? 1, // fallback nếu không có quantity
+      quantity: item.quantity ?? 1,
     }));
 
     try {
       await cartService.syncCartFromLocal(payload);
       toast.success("Cart synced successfully");
       localStorage.removeItem("cart-storage");
+      window.location.reload();
       setShowCartModal(false);
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -87,7 +89,7 @@ export default function Home() {
       <AdSection />
       <TrendingProduct />
       <Deal />
-      <Product />
+      <HomeProductPreview />
       <Subscribe />
       <Footer />
 

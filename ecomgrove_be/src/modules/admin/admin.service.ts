@@ -433,8 +433,8 @@ export class AdminService {
     }
   }
 
-  async findAllProducts(page, limit, all) {
-    return this.productsService.findAllProduct(page, limit, all);
+  async findAllProducts(page, limit, all, price) {
+    return this.productsService.findAllProduct(page, limit, all, price);
   }
 
   async findOneProduct(id) {
