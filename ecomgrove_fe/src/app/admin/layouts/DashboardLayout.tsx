@@ -23,6 +23,7 @@ import {
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { Toaster } from "react-hot-toast";
+import { ProductsContent } from "../products/page";
 
 export default function DashboardLayout() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -200,11 +201,7 @@ export default function DashboardLayout() {
           {activeTab === "dashboard" && <DashboardContent />}
           {activeTab === "users" && <UsersContent />}
           {activeTab === "roles & permissions" && <RoleContent />}
-          {activeTab === "products" && (
-            <div className="h-[900px] flex items-center justify-center text-2xl text-gray-500">
-              Product content coming soon
-            </div>
-          )}
+          {activeTab === "products" && <ProductsContent />}
           {activeTab === "categories" && (
             <div className="h-[900px] flex items-center justify-center text-2xl text-gray-500">
               Categories content coming soon

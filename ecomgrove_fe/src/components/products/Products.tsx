@@ -18,6 +18,7 @@ export default function Products() {
   const router = useRouter();
   const { toggle, isOpen } = useDropdown();
   const [layout, setLayout] = useState<"grid" | "list">("grid");
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [sortingType, setSortingType] = useState<string>("null");
   const [price, setPrice] = useState<number[]>([100]);
   const [tempPrice, setTempPrice] = useState<number[]>([100]);
@@ -65,11 +66,11 @@ export default function Products() {
     limit,
     "false",
     appliedPrice ?? undefined,
-    sortingType
+    sortingType,
+    activeCategory ?? undefined
   );
 
   const { categories: categoryData } = useCategory(1, 10, "false");
-  console.log(categoryData);
 
   const handleSelectSortingType = (type: string) => {
     setSortingType(type);
@@ -102,9 +103,12 @@ export default function Products() {
     setTempPrice([100]);
     setAppliedPrice(null);
     setCurrentPage(1);
+    setActiveCategory(null);
 
     const newUrl = getUpdatedUrl(searchParams, {
       price: null,
+      categories: null,
+      sort: null,
     });
 
     router.replace(newUrl);
@@ -112,6 +116,14 @@ export default function Products() {
 
   const handleSliderChange = (value: number[]) => {
     setTempPrice(value);
+  };
+
+  const handleCategorySelect = (name: string) => {
+    setActiveCategory(name);
+    const newUrl = getUpdatedUrl(searchParams, {
+      categories: name.toLowerCase(),
+    });
+    router.replace(newUrl);
   };
 
   const isFilterApplied = appliedPrice !== null;
@@ -133,77 +145,96 @@ export default function Products() {
           {/* Filter Sidebar */}
           <aside className="lg:col-span-1">
             <div className="bg-white p-6 shadow-sm border">
-              <div className="mb-4">
-                <h3 className="text-mid-night font-semibold text-xl">
+              {/* Price Filter */}
+              <div className="mb-8">
+                <h3 className="text-mid-night font-semibold text-xl mb-4">
                   Price Filter
                 </h3>
-              </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Price Range</label>
-                  <span className="text-sm text-gray-600">${tempPrice[0]}</span>
-                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Price Range</label>
+                    <span className="text-sm text-gray-600">
+                      ${tempPrice[0]}
+                    </span>
+                  </div>
 
-                <Slider
-                  value={tempPrice}
-                  max={1000}
-                  min={0}
-                  step={50}
-                  onValueChange={handleSliderChange}
-                  className="w-full"
-                />
+                  <Slider
+                    value={tempPrice}
+                    max={1000}
+                    min={0}
+                    step={50}
+                    onValueChange={handleSliderChange}
+                    className="w-full"
+                  />
 
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>$0</span>
-                  <span>$1000</span>
-                </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>$0</span>
+                    <span>$1000</span>
+                  </div>
 
-                <div className="pt-2">
-                  <p className="text-sm text-gray-600 mb-3">
-                    {isFilterApplied ? (
-                      <>
-                        Showing products under <strong>${appliedPrice}</strong>
-                      </>
-                    ) : (
-                      "No price filter applied"
-                    )}
-                  </p>
+                  <div className="pt-2">
+                    <p className="text-sm text-gray-600 mb-3">
+                      {isFilterApplied ? (
+                        <>
+                          Showing products under{" "}
+                          <strong>${appliedPrice}</strong>
+                        </>
+                      ) : (
+                        "No price filter applied"
+                      )}
+                    </p>
 
-                  <div className="flex gap-2">
                     <Button
                       variant="black"
                       onClick={handleFilter}
-                      className="flex-1"
+                      className="w-full"
                       disabled={!hasFilterChanged}
                     >
                       Apply Filter
                     </Button>
                   </div>
                 </div>
+              </div>
 
-                {/* Categories filter */}
-                <div className="my-5">
-                  <h3 className="text-xl text-mid-night font-semibold">
-                    Categories
-                  </h3>
+              <hr className="my-5 border-gray-200" />
 
-                  <ul className="space-y-2 mt-3 list-disc max-h-32 overflow-y-auto">
-                    {categoryData.map((item) => (
+              {/* Categories Filter */}
+              <div>
+                <h3 className="text-xl text-mid-night font-semibold mb-4">
+                  Categories
+                </h3>
+
+                <ul className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                  {categoryData.map((item) => {
+                    const isActive = activeCategory === item.name;
+
+                    return (
                       <li
-                        className="flex items-center justify-between group cursor-pointer"
                         key={item.id}
+                        className={`flex items-center justify-between group cursor-pointer transition-colors ${
+                          isActive
+                            ? "text-electric-blue font-medium"
+                            : "hover:text-electric-blue"
+                        }`}
+                        onClick={() => handleCategorySelect(item.name)}
                       >
-                        <p className="group-hover:text-electric-blue">
-                          {item.name}
-                        </p>
-                        <p className="group-hover:bg-electric-blue group-hover:text-white border px-2 rounded-md transition-all duration-300">
-                          3
-                        </p>
+                        <p className="truncate">{item.name}</p>
+                        <span
+                          className={`text-xs border rounded-md px-2 py-0.5 min-w-[24px] h-5
+            flex items-center justify-center transition
+            ${
+              isActive
+                ? "bg-electric-blue text-white border-electric-blue"
+                : "group-hover:bg-electric-blue group-hover:text-white"
+            }`}
+                        >
+                          {item.productCount}
+                        </span>
                       </li>
-                    ))}
-                  </ul>
-                </div>
+                    );
+                  })}
+                </ul>
               </div>
             </div>
           </aside>
