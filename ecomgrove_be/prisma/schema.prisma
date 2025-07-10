@@ -92,7 +92,6 @@ model Permission {
   resource    String
   action      String
 
-  // Quan hệ nhóm
   groupId String?          @map("group_id")
   group   PermissionGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
 
@@ -178,6 +177,7 @@ model Product {
   image       String?
   stock       Int     @default(0)
   isActive    Boolean @default(true) @map("is_active")
+  status      String
 
   // Relations
   categoryId String   @map("category_id")

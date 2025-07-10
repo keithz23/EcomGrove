@@ -4,6 +4,7 @@ import { useAuthStore } from "@/app/store/auth/useAuthStore";
 import { DashboardContent } from "@/components/admin/dashboard/DashboardContent";
 import { SidebarItem } from "@/components/admin/dashboard/SidebarComponents";
 import { RoleContent } from "@/components/admin/permissions/RoleContent";
+import { ProductsContent } from "@/components/admin/product/ProductContent";
 import { UsersContent } from "@/components/admin/users/UserContent";
 import {
   Bell,
@@ -23,7 +24,6 @@ import {
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { Toaster } from "react-hot-toast";
-import { ProductsContent } from "../products/page";
 
 export default function DashboardLayout() {
   const [activeTab, setActiveTab] = useState("dashboard");

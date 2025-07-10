@@ -121,6 +121,7 @@ CREATE TABLE "products" (
     "image" TEXT,
     "stock" INTEGER NOT NULL DEFAULT 0,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "status" TEXT NOT NULL,
     "category_id" TEXT NOT NULL,
     "author_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

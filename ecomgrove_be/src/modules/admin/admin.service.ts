@@ -348,6 +348,7 @@ export class AdminService {
           author: {
             connect: { id: userId },
           },
+          status: 'In Stock',
         },
       });
 
