@@ -115,6 +115,9 @@ export class ProductsService {
     try {
       const product = await this.prisma.product.findFirst({
         where: { id },
+        include: {
+          category: true,
+        },
       });
       if (!product) {
         throw new NotFoundException(`Product with id ${id} not found`);

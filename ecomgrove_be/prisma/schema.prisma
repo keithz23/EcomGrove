@@ -176,7 +176,7 @@ model Product {
   price       Float
   image       String?
   stock       Int     @default(0)
-  isActive    Boolean @default(true) @map("is_active")
+  isActive    Boolean @map("is_active")
   status      String
 
   // Relations

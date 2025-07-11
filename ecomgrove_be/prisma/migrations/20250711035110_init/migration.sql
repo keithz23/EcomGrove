@@ -120,7 +120,7 @@ CREATE TABLE "products" (
     "price" DOUBLE PRECISION NOT NULL,
     "image" TEXT,
     "stock" INTEGER NOT NULL DEFAULT 0,
-    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "is_active" BOOLEAN NOT NULL,
     "status" TEXT NOT NULL,
     "category_id" TEXT NOT NULL,
     "author_id" TEXT NOT NULL,

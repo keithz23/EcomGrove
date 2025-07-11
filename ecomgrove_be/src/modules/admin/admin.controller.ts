@@ -216,6 +216,7 @@ export class AdminController {
     @UploadedFiles() files: { picture?: Express.Multer.File[] },
     @Req() req: Request,
   ) {
+    console.log(updateProductDto);
     const user = (req as any).user.sub;
     let uploadedImageUrl: string | undefined;
     if (files?.picture?.length) {

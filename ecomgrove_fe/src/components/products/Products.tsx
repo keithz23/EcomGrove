@@ -1,6 +1,6 @@
 "use client";
 import { AlignJustify, ChevronDown, LayoutGrid } from "lucide-react";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import useProducts from "@/app/hooks/useProducts";
 import { ProductSortingType } from "@/app/constants/ProductData";
 import ProductCard from "./ProductCard";
@@ -24,20 +24,28 @@ export default function Products() {
   const [tempPrice, setTempPrice] = useState<number[]>([100]);
   const [appliedPrice, setAppliedPrice] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const productRef = useRef<HTMLDivElement | null>(null);
 
   const parsedUrlParams = useMemo(() => {
     const priceParam = searchParams.get("price");
     const sortParam = searchParams.get("sort");
+    const categoryParam = searchParams.get("categories");
 
     return {
       price: priceParam ? Number(priceParam) : null,
       sort: sortParam || "null",
+      category: categoryParam || null,
     };
   }, [searchParams]);
 
   useEffect(() => {
-    const { price: urlPrice, sort: urlSort } = parsedUrlParams;
+    const {
+      price: urlPrice,
+      sort: urlSort,
+      category: urlCategory,
+    } = parsedUrlParams;
 
+    // Price logic
     if (!isNaN(urlPrice!) && urlPrice !== null && urlPrice !== appliedPrice) {
       setPrice([urlPrice]);
       setTempPrice([urlPrice]);
@@ -50,8 +58,14 @@ export default function Products() {
       setAppliedPrice(null);
     }
 
+    // Sort logic
     if (urlSort !== sortingType) {
       setSortingType(urlSort);
+    }
+
+    // Category logic
+    if (urlCategory !== activeCategory) {
+      setActiveCategory(urlCategory);
     }
   }, [parsedUrlParams]);
 
@@ -126,11 +140,19 @@ export default function Products() {
     router.replace(newUrl);
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   const isFilterApplied = appliedPrice !== null;
   const hasFilterChanged = tempPrice[0] !== price[0];
 
   const startItem = (currentPage - 1) * limit + 1;
   const endItem = Math.min(currentPage * limit, totalItems);
+
+  useEffect(() => {
+    productRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [currentPage]);
 
   return (
     <>
@@ -240,7 +262,7 @@ export default function Products() {
           </aside>
 
           {/* Product + Controls */}
-          <section className="lg:col-span-3 space-y-8">
+          <section className="lg:col-span-3 space-y-8" ref={productRef}>
             {/* Active Filters */}
             {isFilterApplied && (
               <div className="bg-gray-50 p-4 rounded-lg border">
@@ -354,6 +376,7 @@ export default function Products() {
                 currentPage={currentPage}
                 limit={limit}
                 totalPages={totalPages}
+                onPageChange={handlePageChange}
               />
             )}
           </section>
