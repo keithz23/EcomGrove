@@ -216,12 +216,12 @@ export class AdminController {
     @UploadedFiles() files: { picture?: Express.Multer.File[] },
     @Req() req: Request,
   ) {
-    console.log(updateProductDto);
     const user = (req as any).user.sub;
     let uploadedImageUrl: string | undefined;
+
     if (files?.picture?.length) {
       const file = files.picture[0];
-      const upload = await S3Service.uploadToS3({ imagePath: file }, 'upload');
+      const upload = await S3Service.uploadToS3({ imagePath: file }, 'product');
       uploadedImageUrl = upload.url;
     }
 

@@ -7,7 +7,7 @@ export interface IUpdateProduct {
   price: number;
   stock: number;
   description: string;
-  isActive: boolean;
+  isActive: string;
   picture: string;
   status: string;
 }

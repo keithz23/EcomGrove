@@ -25,7 +25,7 @@ export const AddProductModal = ({ onClose, onSubmit, isSubmitting }: Props) => {
   } = useForm<ICreateProduct>({
     mode: "onBlur",
     defaultValues: {
-      isActive: true,
+      isActive: "true",
     },
   });
 
@@ -197,8 +197,8 @@ export const AddProductModal = ({ onClose, onSubmit, isSubmitting }: Props) => {
                 </label>
                 <Switch
                   id="isActive"
-                  checked={watch("isActive")}
-                  onCheckedChange={(val) => setValue("isActive", val)}
+                  checked={watch("isActive") === "true"}
+                  onCheckedChange={(val) => setValue("isActive", String(val))}
                 />
               </div>
 

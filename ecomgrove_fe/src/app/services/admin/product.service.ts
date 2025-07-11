@@ -55,4 +55,9 @@ export const productService = {
     const url = `${EService.ADMIN_SERVICE}/${EAdminService.PRODUCT}/${EProductService.UPDATE_PRODUCT}`;
     return instance.patch(url, IUpdateProduct);
   },
+
+  deleteProduct: (id: string) => {
+    const url = `${EService.ADMIN_SERVICE}/${EAdminService.PRODUCT}/${EProductService.DELETE_PRODUCT}/${id}`;
+    return instance.delete(url);
+  },
 };

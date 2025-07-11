@@ -5,7 +5,6 @@ import {
 import {
   AlignJustify,
   LayoutGrid,
-  List,
   Plus,
   Search,
   SquarePen,
@@ -21,6 +20,9 @@ import { productService } from "@/app/services/admin/product.service";
 import { useProductDetail } from "@/app/features/products/hooks/useProductDetail";
 import { EditProductModal } from "./EditProductModal";
 import { IUpdateProduct } from "@/app/features/products/types/update-product.interface";
+import useDisableScroll from "@/app/hooks/useDisableScroll";
+import { DeleteProductModal } from "./DeleteProductModal";
+import capitalizeFirstLetter from "@/app/utils/capitalizeFirstLetter";
 
 export const ProductsContent: React.FC = () => {
   const limit = 12;
@@ -28,14 +30,15 @@ export const ProductsContent: React.FC = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+
   const listRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const [modalState, dispatch] = useReducer(
     userModalReducer,
     initialModalState
+  );
+  useDisableScroll(
+    modalState.showAdd || modalState.showEdit || modalState.showDelete
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,12 +51,7 @@ export const ProductsContent: React.FC = () => {
       const formData = new FormData();
 
       for (const key in data) {
-        const value = (data as any)[key];
-        if (typeof value === "boolean") {
-          formData.append(key, value ? "true" : "false");
-        } else {
-          formData.append(key, value);
-        }
+        formData.append(key, (data as any)[key]);
       }
 
       if (picture) {
@@ -82,12 +80,7 @@ export const ProductsContent: React.FC = () => {
       const formData = new FormData();
 
       for (const key in data) {
-        const value = (data as any)[key];
-        if (typeof value === "boolean") {
-          formData.append(key, value ? "true" : "false");
-        } else {
-          formData.append(key, value);
-        }
+        formData.append(key, (data as any)[key]);
       }
 
       if (picture) {
@@ -106,6 +99,31 @@ export const ProductsContent: React.FC = () => {
     }
   };
 
+  const handleDeleteProduct = async () => {
+    if (!product) return;
+    setIsSubmitting(true);
+    try {
+      await toast.promise(productService.deleteProduct(product.id), {
+        loading: "Deleting product...",
+        success: "Product deleted successfully",
+        error: (err) => getErrorMessage(err),
+      });
+      refetch();
+      dispatch({ type: "CLOSE_ALL" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleShowAddModal = () => {
+    dispatch({ type: "SHOW_ADD" });
+  };
+  const {
+    products: products,
+    totalPages,
+    refetch,
+  } = useProducts(page, limit, "false");
+
   const handleShowEditModal = async (id: string) => {
     try {
       await fetchProduct(id);
@@ -115,20 +133,14 @@ export const ProductsContent: React.FC = () => {
     }
   };
 
-  const handleDeleteProduct = () => {
-    setShowDeleteModal(false);
+  const handleShowDeleteModal = async (id: string) => {
+    try {
+      await fetchProduct(id);
+      dispatch({ type: "SHOW_DELETE" });
+    } catch (error) {
+      toast.error("Failed to load user info");
+    }
   };
-
-  const handleShowAddModal = () => {
-    dispatch({ type: "SHOW_ADD" });
-  };
-  const {
-    products: products,
-    totalItems,
-    totalPages,
-    loading,
-    refetch,
-  } = useProducts(page, limit, "false");
 
   const { product, fetchProduct } = useProductDetail();
 
@@ -234,9 +246,20 @@ export const ProductsContent: React.FC = () => {
                 </div>
 
                 <div className="p-4">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    {product.name}
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {product.name}
+                    </h3>
+                    <span
+                      className={`inline-block text-xs font-semibold rounded-full px-2 py-1 ${
+                        product.isActive === "true"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {product.isActive === "true" ? "Active" : "Inactive"}
+                    </span>
+                  </div>
                   <p className="text-sm text-gray-500 mb-2">
                     {product.category.name}
                   </p>
@@ -269,7 +292,12 @@ export const ProductsContent: React.FC = () => {
                       >
                         <SquarePen />
                       </button>
-                      <button className="text-red-600 hover:text-red-900 cursor-pointer !rounded-button whitespace-nowrap">
+                      <button
+                        className="text-red-600 hover:text-red-900 cursor-pointer !rounded-button whitespace-nowrap"
+                        onClick={() => {
+                          handleShowDeleteModal(product.id);
+                        }}
+                      >
                         <Trash />
                       </button>
                     </div>
@@ -297,6 +325,9 @@ export const ProductsContent: React.FC = () => {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Display Product
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -350,6 +381,19 @@ export const ProductsContent: React.FC = () => {
                         {product.status}
                       </span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            product.isActive === "true"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {product.isActive === "true" ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => handleShowEditModal(product.id)}
@@ -360,6 +404,9 @@ export const ProductsContent: React.FC = () => {
                       <button
                         // onClick={() => handleDelete(user)}
                         className="text-red-600 hover:text-red-900 cursor-pointer !rounded-button whitespace-nowrap"
+                        onClick={() => {
+                          handleShowDeleteModal(product.id);
+                        }}
                       >
                         <Trash className="h-5 w-5" />
                       </button>
@@ -422,6 +469,14 @@ export const ProductsContent: React.FC = () => {
           productData={product}
           onClose={() => dispatch({ type: "CLOSE_ALL" })}
           onSubmit={handleEditProduct}
+        />
+      )}
+      {modalState.showDelete && product && (
+        <DeleteProductModal
+          isSubmitting={isSubmitting}
+          productData={product}
+          onClose={() => dispatch({ type: "CLOSE_ALL" })}
+          onSubmit={handleDeleteProduct}
         />
       )}
     </div>

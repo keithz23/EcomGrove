@@ -26,9 +26,8 @@ export class CreateProductDto {
   description: string;
 
   @ApiProperty()
-  @Transform(({ value }) => value === 'true')
-  @IsBoolean()
-  isActive: boolean;
+  @IsString()
+  isActive: string;
 
   @ApiProperty({ type: 'string', format: 'binary' })
   picture: any;

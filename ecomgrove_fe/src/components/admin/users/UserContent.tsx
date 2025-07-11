@@ -16,6 +16,7 @@ import { useUsers } from "@/app/features/users/hooks/useUser";
 import { useUserDetail } from "@/app/features/users/hooks/useUserDetail";
 import { getErrorMessage } from "@/app/utils/getMessageError.util";
 import { DeleteUserModal } from "./DeleteUserModal";
+import useDisableScroll from "@/app/hooks/useDisableScroll";
 
 export const UsersContent: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -26,6 +27,10 @@ export const UsersContent: React.FC = () => {
   const [modalState, dispatch] = useReducer(
     userModalReducer,
     initialModalState
+  );
+
+  useDisableScroll(
+    modalState.showAdd || modalState.showEdit || modalState.showDelete
   );
 
   const {

@@ -9,6 +9,6 @@ export interface IProducts {
   stock: number;
   createdAt: string;
   status?: string;
-  isActive?: boolean;
+  isActive?: string;
   category: ICategories;
 }

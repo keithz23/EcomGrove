@@ -4,6 +4,6 @@ export interface ICreateProduct {
   price: number;
   stock: number;
   description: string;
-  isActive: boolean;
+  isActive: string;
   picture: string;
 }

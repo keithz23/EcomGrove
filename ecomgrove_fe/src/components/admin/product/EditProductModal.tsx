@@ -30,9 +30,6 @@ export const EditProductModal = ({
     formState: { errors },
   } = useForm<IUpdateProduct>({
     mode: "onBlur",
-    defaultValues: {
-      isActive: true,
-    },
   });
 
   const { categories } = useCategory(1, 10, "true");
@@ -49,13 +46,13 @@ export const EditProductModal = ({
         price: productData.price,
         stock: productData.stock,
         description: productData.description,
-        isActive: productData.isActive,
         picture: productData.image,
         status: productData.status,
       });
+      setValue("isActive", String(productData.isActive));
       setPreviewImage(productData.image || null);
     }
-  }, [productData, categories, reset]);
+  }, [productData, categories, reset, setValue]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -251,8 +248,8 @@ export const EditProductModal = ({
                 </label>
                 <Switch
                   id="isActive"
-                  checked={watch("isActive")}
-                  onCheckedChange={(val) => setValue("isActive", val)}
+                  checked={watch("isActive") === "true"}
+                  onCheckedChange={(val) => setValue("isActive", String(val))}
                 />
               </div>
 

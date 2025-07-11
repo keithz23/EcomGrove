@@ -19,8 +19,7 @@ import { DeleteRoleModal } from "./DeleteRoleModal";
 import { useRoleDetail } from "@/app/features/roles/hooks/useRoleDetail";
 import { EditRoleModal } from "./EditRoleModal";
 import PermissionsContent from "./PermissionsContent";
-import PermissionsAGGrid from "./PermissionsAGGrid";
-import PermissionsMatrix from "./PermissionsAGGrid";
+import useDisableScroll from "@/app/hooks/useDisableScroll";
 
 export const RoleContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"roles" | "permissions">("roles");
@@ -31,7 +30,9 @@ export const RoleContent: React.FC = () => {
     userModalReducer,
     initialModalState
   );
-
+  useDisableScroll(
+    modalState.showAdd || modalState.showEdit || modalState.showDelete
+  );
   const {
     roles: rolesData,
     totalPages: rolesTotalPages,

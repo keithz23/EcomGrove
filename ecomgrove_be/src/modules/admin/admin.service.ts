@@ -375,14 +375,14 @@ export class AdminService {
       isActive,
       status,
     } = updateProductDto;
-    
+
     try {
       const existingProduct = await this.prisma.product.findUnique({
         where: { id },
       });
 
       if (!existingProduct) {
-        throw new NotFoundException(`Role with id ${id} not found`);
+        throw new NotFoundException(`Product with id ${id} not found`);
       }
 
       await this.prisma.product.update({
