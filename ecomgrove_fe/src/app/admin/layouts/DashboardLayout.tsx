@@ -1,6 +1,7 @@
 "use client";
 import useDropdown from "@/app/hooks/useDropdown";
 import { useAuthStore } from "@/app/store/auth/useAuthStore";
+import { CategoriesContent } from "@/components/admin/categories/CategoriesContent";
 import { DashboardContent } from "@/components/admin/dashboard/DashboardContent";
 import { SidebarItem } from "@/components/admin/dashboard/SidebarComponents";
 import { RoleContent } from "@/components/admin/permissions/RoleContent";
@@ -202,11 +203,7 @@ export default function DashboardLayout() {
           {activeTab === "users" && <UsersContent />}
           {activeTab === "roles & permissions" && <RoleContent />}
           {activeTab === "products" && <ProductsContent />}
-          {activeTab === "categories" && (
-            <div className="h-[900px] flex items-center justify-center text-2xl text-gray-500">
-              Categories content coming soon
-            </div>
-          )}
+          {activeTab === "categories" && <CategoriesContent />}
           {activeTab === "analytics" && (
             <div className="h-[900px] flex items-center justify-center text-2xl text-gray-500">
               Analytics content coming soon

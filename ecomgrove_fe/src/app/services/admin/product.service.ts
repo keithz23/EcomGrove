@@ -1,7 +1,6 @@
 import { EService } from "@/app/enums/EService";
 import { EAdminService } from "@/app/enums/services/admin/EAdminService";
 import { EProductService } from "@/app/enums/services/admin/EProductService";
-import { ICreateProduct } from "@/app/features/products/types/create-product.interface";
 import { instance } from "@/lib/axios";
 
 export const productService = {
@@ -11,7 +10,7 @@ export const productService = {
     all: string,
     sort?: string,
     price?: number,
-    categories?: string
+    categories?: string[]
   ) => {
     const params = new URLSearchParams();
 
@@ -42,7 +41,7 @@ export const productService = {
   },
 
   findOneProduct: (id: string) => {
-    const url = `${EService.PRODUCT_SERVICE}/${EProductService.FIND_ONE_PRODUCT}${id}`;
+    const url = `${EService.ADMIN_SERVICE}/${EAdminService.PRODUCT}/${EProductService.FIND_ONE_PRODUCT}${id}`;
     return instance.get(url);
   },
 

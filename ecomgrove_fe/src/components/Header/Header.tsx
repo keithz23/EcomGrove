@@ -14,6 +14,7 @@ import Cart from "../cart/Cart";
 import TopHeader from "./TopHeader";
 import { useCartStore } from "@/app/store/cart/useCartStore";
 import CategoriesMenu from "./CategoriesMenu";
+import useDisableScroll from "@/app/hooks/useDisableScroll";
 
 interface HeaderColor {
   color?: string;
@@ -24,6 +25,7 @@ export const Header: React.FC<HeaderColor> = ({ color = "bg-black" }) => {
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { isCartOpen, closeCart, openCart } = useCartStore();
+  useDisableScroll(isCartOpen);
 
   return (
     <>

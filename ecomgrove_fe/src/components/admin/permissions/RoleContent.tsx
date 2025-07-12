@@ -307,7 +307,6 @@ export const RoleContent: React.FC = () => {
       ) : (
         // Permissions tab
         <PermissionsContent />
-        // <PermissionsMatrix />
       )}
 
       {/* Modals */}

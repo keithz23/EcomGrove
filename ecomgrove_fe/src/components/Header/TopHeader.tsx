@@ -8,9 +8,8 @@ import { LanguagesData, SettingsData } from "@/app/constants/SettingsData";
 
 export default function TopHeader() {
   const router = useRouter();
-  const { toggle, isOpen } = useDropdown();
+  const { toggle, isOpen, dropdownRef } = useDropdown();
   const { isAuthenticated, logout } = useAuthStore();
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     logout();

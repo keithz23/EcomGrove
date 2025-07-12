@@ -439,8 +439,15 @@ export class AdminService {
     }
   }
 
-  async findAllProducts(page, limit, all, price) {
-    return this.productsService.findAllProduct(page, limit, all, price);
+  async findAllProducts(page, limit, all, sort, price, categories) {
+    return this.productsService.findAllProduct(
+      page,
+      limit,
+      all,
+      sort,
+      price,
+      categories,
+    );
   }
 
   async findOneProduct(id) {

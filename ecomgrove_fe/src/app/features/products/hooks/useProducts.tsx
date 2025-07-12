@@ -9,7 +9,7 @@ export default function useProducts(
   all: string,
   price?: number,
   sort?: string,
-  categories?: string
+  categories?: string[]
 ) {
   const [products, setProducts] = useState<IProducts[]>([]);
   const [totalPages, setTotalPages] = useState(1);

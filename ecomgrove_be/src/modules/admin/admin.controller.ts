@@ -246,10 +246,19 @@ export class AdminController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
     @Query('all') all: string = 'false',
+    @Query('sort') sort: string,
     @Query('price') price?: number,
+    @Query('categories') categories?: string[],
   ) {
     const isAll = all === 'true';
-    return this.adminService.findAllProducts(+page, +limit, isAll, price);
+    return this.adminService.findAllProducts(
+      +page,
+      +limit,
+      isAll,
+      sort,
+      price,
+      categories,
+    );
   }
 
   @Get('product/:id')

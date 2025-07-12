@@ -10,7 +10,7 @@ import { Button } from "../ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import useDropdown from "@/app/hooks/useDropdown";
 import { getUpdatedUrl } from "@/app/utils/urlParams.util";
-import useCategory from "@/app/features/categories/hooks/useCategory";
+import useCategory from "@/app/hooks/useCategory";
 
 export default function Products() {
   const limit = 9;
@@ -229,7 +229,8 @@ export default function Products() {
 
                 <ul className="space-y-2 max-h-48 overflow-y-auto pr-2">
                   {categoryData.map((item) => {
-                    const isActive = activeCategory === item.name;
+                    const isActive =
+                      activeCategory?.toLowerCase() === item.name.toLowerCase();
 
                     return (
                       <li
@@ -244,12 +245,12 @@ export default function Products() {
                         <p className="truncate">{item.name}</p>
                         <span
                           className={`text-xs border rounded-md px-2 py-0.5 min-w-[24px] h-5
-            flex items-center justify-center transition
-            ${
-              isActive
-                ? "bg-electric-blue text-white border-electric-blue"
-                : "group-hover:bg-electric-blue group-hover:text-white"
-            }`}
+          flex items-center justify-center transition
+          ${
+            isActive
+              ? "bg-electric-blue text-white border-electric-blue"
+              : "group-hover:bg-electric-blue group-hover:text-white"
+          }`}
                         >
                           {item.productCount}
                         </span>

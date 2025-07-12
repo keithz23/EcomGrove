@@ -1,10 +1,8 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { X } from "lucide-react";
-import useRole from "@/app/features/roles/hooks/useRole";
 import { useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { ICreateUser } from "@/app/types/admin/create-user.interface";
 import useCategory from "@/app/features/categories/hooks/useCategory";
 import { Switch } from "@/components/ui/switch";
 import { ICreateProduct } from "@/app/features/products/types/create-product.interface";

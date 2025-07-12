@@ -22,13 +22,19 @@ import { EditProductModal } from "./EditProductModal";
 import { IUpdateProduct } from "@/app/features/products/types/update-product.interface";
 import useDisableScroll from "@/app/hooks/useDisableScroll";
 import { DeleteProductModal } from "./DeleteProductModal";
-import capitalizeFirstLetter from "@/app/utils/capitalizeFirstLetter";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import useCategory from "@/app/features/categories/hooks/useCategory";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const ProductsContent: React.FC = () => {
   const limit = 12;
   const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState("grid");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   const listRef = useRef<HTMLDivElement>(null);
@@ -41,6 +47,12 @@ export const ProductsContent: React.FC = () => {
     modalState.showAdd || modalState.showEdit || modalState.showDelete
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const toggleCategory = (id: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(id) ? prev.filter((cid) => cid !== id) : [...prev, id]
+    );
+  };
 
   const handleAddProduct = async (
     data: ICreateProduct,
@@ -91,7 +103,6 @@ export const ProductsContent: React.FC = () => {
         success: "Product updated successfully",
         error: (err) => getErrorMessage(err),
       });
-      console.log(JSON.stringify(data));
       refetch();
       dispatch({ type: "CLOSE_ALL" });
     } finally {
@@ -122,7 +133,14 @@ export const ProductsContent: React.FC = () => {
     products: products,
     totalPages,
     refetch,
-  } = useProducts(page, limit, "false");
+  } = useProducts(
+    page,
+    limit,
+    "false",
+    undefined,
+    undefined,
+    selectedCategories
+  );
 
   const handleShowEditModal = async (id: string) => {
     try {
@@ -143,6 +161,7 @@ export const ProductsContent: React.FC = () => {
   };
 
   const { product, fetchProduct } = useProductDetail();
+  const { categories } = useCategory(1, 10, "true");
 
   useEffect(() => {
     listRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -201,31 +220,47 @@ export const ProductsContent: React.FC = () => {
         </div>
         {/* Categories */}
         <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer !rounded-button whitespace-nowrap ${
-              selectedCategory === "all"
-                ? "bg-indigo-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-            onClick={() => setSelectedCategory("all")}
-          >
-            All
-          </button>
-          {["Electronics", "Clothing", "Accessories", "Footwear"].map(
-            (category) => (
-              <button
-                key={category}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer !rounded-button whitespace-nowrap ${
-                  selectedCategory === category
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors duration-200 flex items-center justify-center cursor-pointer !rounded-button whitespace-nowrap">
+                Select Categories
               </button>
-            )
-          )}
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-80 p-4"
+              side="bottom"
+              align="start"
+              forceMount
+            >
+              <div className="flex justify-between items-center mb-2">
+                <h4 className="text-sm font-medium">Select Categories</h4>
+                <button
+                  onClick={() => setSelectedCategories([])}
+                  className="text-xs text-gray-500 hover:underline cursor-pointer"
+                >
+                  Clear All
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {categories.map((category) => (
+                  <label
+                    key={category.id}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <Checkbox
+                      checked={selectedCategories.includes(category.name)}
+                      onCheckedChange={() => toggleCategory(category.name)}
+                      id={`cat-${category.id}`}
+                    />
+                    <span className="text-sm text-gray-800">
+                      {category.name}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
       {/* Products Grid/List View */}
@@ -402,7 +437,6 @@ export const ProductsContent: React.FC = () => {
                         <SquarePen className="h-5 w-5" />
                       </button>
                       <button
-                        // onClick={() => handleDelete(user)}
                         className="text-red-600 hover:text-red-900 cursor-pointer !rounded-button whitespace-nowrap"
                         onClick={() => {
                           handleShowDeleteModal(product.id);

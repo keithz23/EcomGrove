@@ -17,7 +17,7 @@ export class ProductsService {
     all: boolean,
     sort: string,
     price?: number,
-    categories?: string,
+    categories?: string | string[],
   ) {
     const safePage = Math.max(1, page);
     const safeLimit = Math.min(Math.max(1, limit), 100);
@@ -28,13 +28,24 @@ export class ProductsService {
     if (typeof price === 'number') {
       where.price = { lt: price };
     }
+
     if (categories) {
-      where.category = {
-        name: {
-          equals: categories,
-          mode: 'insensitive',
-        },
-      };
+      let categoryFilter: string[] = [];
+
+      if (Array.isArray(categories)) {
+        categoryFilter = categories;
+      } else if (typeof categories === 'string') {
+        categoryFilter = categories.split(',').map((c) => c.trim());
+      }
+
+      if (categoryFilter.length > 0) {
+        where.category = {
+          name: {
+            in: categoryFilter,
+            mode: 'insensitive',
+          },
+        };
+      }
     }
 
     // Sorting
