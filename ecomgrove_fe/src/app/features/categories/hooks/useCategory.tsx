@@ -15,7 +15,6 @@ export default function useCategory(page: number, limit: number, all: string) {
     try {
       const res = await categoryService.findAllCategories(page, limit, all);
       const resData = res.data;
-      console.log(resData);
       setCategories(resData.data);
       setTotalPages(resData.totalPages);
     } catch (error) {

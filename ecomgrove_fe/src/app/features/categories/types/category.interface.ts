@@ -4,5 +4,6 @@ export interface ICategories {
   id: string;
   name: string;
   description: string;
+  productCount: number;
   products: IProducts[];
 }

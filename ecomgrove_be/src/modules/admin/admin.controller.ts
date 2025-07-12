@@ -218,9 +218,10 @@ export class AdminController {
   ) {
     const user = (req as any).user.sub;
     let uploadedImageUrl: string | undefined;
+
     if (files?.picture?.length) {
       const file = files.picture[0];
-      const upload = await S3Service.uploadToS3({ imagePath: file }, 'upload');
+      const upload = await S3Service.uploadToS3({ imagePath: file }, 'product');
       uploadedImageUrl = upload.url;
     }
 
@@ -245,10 +246,19 @@ export class AdminController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
     @Query('all') all: string = 'false',
+    @Query('sort') sort: string,
     @Query('price') price?: number,
+    @Query('categories') categories?: string[],
   ) {
     const isAll = all === 'true';
-    return this.adminService.findAllProducts(+page, +limit, isAll, price);
+    return this.adminService.findAllProducts(
+      +page,
+      +limit,
+      isAll,
+      sort,
+      price,
+      categories,
+    );
   }
 
   @Get('product/:id')

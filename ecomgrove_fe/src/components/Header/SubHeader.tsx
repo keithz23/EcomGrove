@@ -16,20 +16,17 @@ import { Button } from "../ui/button";
 import Cart from "../cart/Cart";
 import { useCartStore } from "@/app/store/cart/useCartStore";
 import { categoriesData, navItems } from "@/app/constants/headerData";
+import useDropdown from "@/app/hooks/useDropdown";
 
 export default function SubHeader() {
   const [isActive, setIsActive] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [openDropdown, setOpenDropDown] = useState<string | null>(null);
+  const { toggle, isOpen, dropdownRef } = useDropdown();
   const [keyword, setKeyword] = useState("");
   const { isCartOpen, closeCart, openCart } = useCartStore();
 
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-
-  const toggleDropdown = (dropdownKey: string) => {
-    setOpenDropDown((prev) => (prev === dropdownKey ? null : dropdownKey));
-  };
 
   const toggleSetIsActive = () => setIsActive(true);
 
@@ -84,9 +81,7 @@ export default function SubHeader() {
             <div
               ref={searchRef}
               className={`hidden lg:flex border h-10 bg-gray-100 items-center w-full max-w-xs transition ${
-                isActive
-                  ? "border-electric-blue"
-                  : "border-gray-300"
+                isActive ? "border-electric-blue" : "border-gray-300"
               }`}
               onClick={toggleSetIsActive}
             >
@@ -145,41 +140,43 @@ export default function SubHeader() {
             </div>
 
             {/* Categories */}
-            <button
-              className="flex justify-between items-center h-12 mt-5 w-full bg-electric-blue text-white px-5 hover:bg-black"
-              onClick={() => toggleDropdown("category")}
-            >
-              <span className="flex gap-x-2 items-center">
-                <AlignJustify className="h-5 w-5" />
-                All Categories
-              </span>
-              <ChevronDown
-                className={`transform transition ${
-                  openDropdown === "category" ? "rotate-180" : ""
-                }`}
-              />
-            </button>
+            <div ref={dropdownRef}>
+              <button
+                className="flex justify-between items-center h-12 mt-5 w-full bg-electric-blue text-white px-5 hover:bg-black"
+                onClick={() => toggle("category")}
+              >
+                <span className="flex gap-x-2 items-center">
+                  <AlignJustify className="h-5 w-5" />
+                  All Categories
+                </span>
+                <ChevronDown
+                  className={`transform transition ${
+                    isOpen("category") ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
 
-            {openDropdown === "category" && (
-              <ul className="bg-white p-4 space-y-3 mt-2 max-h-80 overflow-auto">
-                {categoriesData.map((cat) => (
-                  <li
-                    key={cat.id}
-                    className="flex justify-between items-center border-b pb-2"
-                  >
-                    <div className="flex gap-x-3 items-center">
-                      <div className="bg-blue-100 text-blue-700 w-12 h-12 flex justify-center items-center font-bold rounded">
-                        {cat.name.slice(0, 3).toUpperCase()}
+              {isOpen("category") && (
+                <ul className="bg-white p-4 space-y-3 mt-2 max-h-80 overflow-auto">
+                  {categoriesData.map((cat) => (
+                    <li
+                      key={cat.id}
+                      className="flex justify-between items-center border-b pb-2"
+                    >
+                      <div className="flex gap-x-3 items-center">
+                        <div className="bg-blue-100 text-blue-700 w-12 h-12 flex justify-center items-center font-bold rounded">
+                          {cat.name.slice(0, 3).toUpperCase()}
+                        </div>
+                        <span className="text-sm font-medium text-gray-800">
+                          {cat.name}
+                        </span>
                       </div>
-                      <span className="text-sm font-medium text-gray-800">
-                        {cat.name}
-                      </span>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
-                  </li>
-                ))}
-              </ul>
-            )}
+                      <ChevronRight className="h-5 w-5 text-gray-400" />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
             {/* Mobile Nav */}
             <ul className="mt-6 space-y-4 text-md font-semibold text-gray-700">

@@ -1,8 +1,11 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import usePermissionGroup from "@/app/features/permissions/hooks/usePermissionGroup";
 import useRole from "@/app/features/roles/hooks/useRole";
-import capitalizeFirstLetter from "@/app/utils/capitalizeFirstLetter";
 import { useRoleDetail } from "@/app/features/roles/hooks/useRoleDetail";
+import capitalizeFirstLetter from "@/app/utils/capitalizeFirstLetter";
 import { permissionsService } from "@/app/services/admin/permissions.service";
 import toast from "react-hot-toast";
 import { getErrorMessage } from "@/app/utils/getMessageError.util";
@@ -38,7 +41,6 @@ export default function PermissionsTabView() {
   const togglePermission = (roleId: string, permissionId: string) => {
     setSelectedPermissions((prev) => {
       const current = new Set(prev[roleId] || []);
-
       if (current.has(permissionId)) {
         current.delete(permissionId);
       } else {
@@ -50,22 +52,6 @@ export default function PermissionsTabView() {
 
       return { ...prev, [roleId]: current };
     });
-  };
-
-  const handleAssignPermissions = async () => {
-    try {
-      const resData = await permissionsService.assignPermissions(
-        String(activeRoleId),
-        permissionsId
-      );
-
-      if (resData.status == 201 && resData.data) {
-        toast.success(resData.data.message);
-        refetch();
-      }
-    } catch (error) {
-      getErrorMessage(error);
-    }
   };
 
   const toggleGroupPermissions = (
@@ -83,9 +69,34 @@ export default function PermissionsTabView() {
       }
 
       setPermissionsId(Array.from(updatedSet));
-
       return { ...prev, [activeRoleId!]: updatedSet };
     });
+  };
+
+  const handleAssignPermissions = async () => {
+    try {
+      const resData = await permissionsService.assignPermissions(
+        String(activeRoleId),
+        permissionsId
+      );
+      if (resData.status == 201 && resData.data) {
+        toast.success(resData.data.message);
+        refetch();
+      }
+    } catch (error) {
+      getErrorMessage(error);
+    }
+  };
+
+  const handleReset = () => {
+    if (activeRoleId && role?.rolePermissions) {
+      const existing = role.rolePermissions.map((rp) => rp.permissionId);
+      setSelectedPermissions((prev) => ({
+        ...prev,
+        [activeRoleId]: new Set(existing),
+      }));
+      setPermissionsId(existing);
+    }
   };
 
   const handleTabClick = async (roleId: string) => {
@@ -101,12 +112,11 @@ export default function PermissionsTabView() {
           <button
             key={role.id}
             onClick={() => handleTabClick(String(role.id))}
-            className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors duration-150 cursor-pointer
-              ${
-                activeRoleId === role.id
-                  ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-              }`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors duration-150 cursor-pointer ${
+              activeRoleId === role.id
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+            }`}
           >
             {capitalizeFirstLetter(role.name)}
           </button>
@@ -134,24 +144,22 @@ export default function PermissionsTabView() {
                 key={group.id}
                 className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50"
               >
-                {/* Header with master checkbox */}
+                {/* Group Header */}
                 <div className="flex items-center justify-between mb-3">
                   <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={allSelected}
-                      ref={(el) => {
-                        if (el) el.indeterminate = partiallySelected;
-                      }}
-                      onChange={(e) =>
+                      onCheckedChange={(checked) =>
                         toggleGroupPermissions(
-                          group.permissions
-                            .filter((p) => typeof p.id === "string")
-                            .map((p) => ({ id: String(p.id) })),
-                          e.target.checked
+                          group.permissions.map((p) => ({ id: String(p.id) })),
+                          Boolean(checked)
                         )
                       }
-                      className="rounded text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                      ref={(el) => {
+                        if (el && el instanceof HTMLInputElement) {
+                          el.indeterminate = partiallySelected;
+                        }
+                      }}
                     />
                     <span className="text-base font-semibold text-gray-700">
                       {capitalizeFirstLetter(group.name)}
@@ -159,35 +167,27 @@ export default function PermissionsTabView() {
                   </label>
                 </div>
 
-                {/* Permission checkboxes */}
+                {/* Individual Permissions */}
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {group.permissions.map((permission) => {
                     const isChecked =
                       selectedPermissions[activeRoleId!]?.has(
                         String(permission.id)
-                      ) ??
-                      role?.rolePermissions?.some(
-                        (rp) =>
-                          rp.permissionId === permission.id &&
-                          rp.roleId === activeRoleId
-                      ) ??
-                      false;
+                      ) ?? false;
 
                     return (
                       <label
                         key={permission.id}
                         className="flex items-center space-x-2"
                       >
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={isChecked}
-                          onChange={() =>
+                          onCheckedChange={() =>
                             togglePermission(
                               activeRoleId!,
                               String(permission.id)
                             )
                           }
-                          className="rounded text-indigo-600 border-gray-300 focus:ring-indigo-500"
                         />
                         <span className="text-sm text-gray-800">
                           {permission.displayName}
@@ -202,7 +202,10 @@ export default function PermissionsTabView() {
 
           {/* Action Buttons */}
           <div className="mt-6 flex justify-end gap-3">
-            <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100">
+            <button
+              className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
+              onClick={handleReset}
+            >
               Reset
             </button>
             <button

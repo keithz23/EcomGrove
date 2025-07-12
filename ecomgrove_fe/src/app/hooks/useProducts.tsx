@@ -8,7 +8,8 @@ export default function useProducts(
   limit: number,
   all: string,
   price?: number,
-  sort?: string
+  sort?: string,
+  categories?: string
 ) {
   const [products, setProducts] = useState<IProducts[]>([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -26,7 +27,8 @@ export default function useProducts(
         limit,
         all,
         sort,
-        price ?? undefined
+        price ?? undefined,
+        categories
       );
       const resData = res.data;
 
@@ -42,7 +44,7 @@ export default function useProducts(
     } finally {
       setLoading(false);
     }
-  }, [page, limit, all, price, sort]);
+  }, [page, limit, all, price, sort, categories]);
 
   useEffect(() => {
     fetchProducts();

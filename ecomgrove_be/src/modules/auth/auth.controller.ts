@@ -92,7 +92,11 @@ export class AuthController {
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
-    return { user };
+    return {
+      data: {
+        user,
+      },
+    };
   }
 
   @Post('refresh')

@@ -8,7 +8,8 @@ export const productService = {
     limit: number,
     all: string,
     sort?: string,
-    price?: number
+    price?: number,
+    categories?: string
   ) => {
     const params = new URLSearchParams();
 
@@ -25,6 +26,10 @@ export const productService = {
 
     if (sort) {
       params.append("sort", sort.toString());
+    }
+
+    if (categories) {
+      params.append("categories", categories.toString());
     }
 
     const url = `${EService.PRODUCT_SERVICE}/${

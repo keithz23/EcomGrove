@@ -22,6 +22,7 @@ type ProductCardProps = {
   currentPage: number;
   limit: number;
   totalPages: number;
+  onPageChange: (page: number) => void;
 };
 
 export default function ProductCard({
@@ -30,9 +31,9 @@ export default function ProductCard({
   currentPage,
   limit,
   totalPages,
+  onPageChange,
 }: ProductCardProps) {
   const router = useRouter();
-  const [page, setPage] = useState(1);
   const productRef = useRef<HTMLDivElement | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<IProducts | null>(
     null
@@ -45,7 +46,7 @@ export default function ProductCard({
     : useGuestCartStore((s) => s.addToCart);
 
   const handlePageChange = (newPage: number) => {
-    setPage(newPage);
+    onPageChange(newPage);
     setTimeout(() => {
       productRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 0);
@@ -154,9 +155,11 @@ export default function ProductCard({
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  if (page > 1) handlePageChange(page - 1);
+                  if (currentPage > 1) handlePageChange(currentPage - 1);
                 }}
-                className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                className={
+                  currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                }
               />
             </PaginationItem>
 
@@ -164,7 +167,7 @@ export default function ProductCard({
               <PaginationItem key={i}>
                 <PaginationLink
                   href="#"
-                  isActive={page === i + 1}
+                  isActive={currentPage === i + 1}
                   onClick={(e) => {
                     e.preventDefault();
                     handlePageChange(i + 1);
@@ -180,16 +183,20 @@ export default function ProductCard({
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  if (page < totalPages) handlePageChange(page + 1);
+                  if (currentPage < totalPages)
+                    handlePageChange(currentPage + 1);
                 }}
                 className={
-                  page === totalPages ? "pointer-events-none opacity-50" : ""
+                  currentPage === totalPages
+                    ? "pointer-events-none opacity-50"
+                    : ""
                 }
               />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
       )}
+
       <ProductDetailModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
