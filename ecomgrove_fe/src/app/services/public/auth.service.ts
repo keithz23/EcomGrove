@@ -3,6 +3,7 @@ import { IChangePassword, IUserSignup } from "@/app/types/user/user.interface";
 import { EAuthService } from "@/app/enums/services/auth/EAuthService";
 import { EService } from "@/app/enums/EService";
 import { AxiosRequestHeaders } from "axios";
+import { IResetPassword } from "@/app/types/auth/auth.inteface";
 
 export const authService = {
   signup: (data: IUserSignup) => {
@@ -33,6 +34,16 @@ export const authService = {
   checkAuth: () => {
     const url = `${EService.AUTH_SERVICE}/${EAuthService.CHECKAUTH_SERVICE}`;
     return instance.get(url);
+  },
+
+  forgot: (email: string) => {
+    const url = `${EService.AUTH_SERVICE}/${EAuthService.FORGOT_PASSWORD}`;
+    return instance.post(url, { email });
+  },
+
+  reset: (token: string, newPassword: string, confirmPassword: string) => {
+    const url = `${EService.AUTH_SERVICE}/${EAuthService.RESET_PASSWORD}`;
+    return instance.post(url, { token, newPassword, confirmPassword });
   },
 
   refresh: () => {

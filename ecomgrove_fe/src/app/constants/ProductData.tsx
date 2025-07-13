@@ -1,8 +1,8 @@
 export const ProductSortingType = [
   { id: 1, name: "Default Sorting", lowerName: "default_sorting" },
-  { id: 2, name: "High to Low", lowerName: "high_to_low" },
-  { id: 3, name: "Low to High", lowerName: "low_to_high" },
-  { id: 4, name: "New Added", lowerName: "new_added" },
+  { id: 2, name: "High to Low", lowerName: "high-to-low" },
+  { id: 3, name: "Low to High", lowerName: "low-to-high" },
+  { id: 4, name: "New Added", lowerName: "new-added" },
 ];
 
 export const categoriesData = [

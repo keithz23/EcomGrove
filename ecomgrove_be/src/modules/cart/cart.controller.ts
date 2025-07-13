@@ -14,6 +14,7 @@ import { AddToCartDto } from './dto/add-to-cart.dto';
 import { CombinedAuthGuard } from '../auth/guards/combined.guard';
 import { Request } from 'express';
 import { UpdateCartDto } from './dto/update-cart.dto';
+import { RemoveFromCartDto } from './dto/remove-from-cart.dto';
 
 @Controller('cart')
 export class CartController {
@@ -39,10 +40,21 @@ export class CartController {
     return this.cartService.updateCart(updateCartDto);
   }
 
-  @Delete(':id')
+  @Delete('remove-from-cart')
   @UseGuards(CombinedAuthGuard)
-  async deleteCart(@Param('id') id: string) {
-    return this.cartService.removeCartItem(id);
+  async removeFromCart(
+    @Body() removeFromCartDto: RemoveFromCartDto,
+    @Req() req: Request,
+  ) {
+    const user = (req as any).user.sub;
+    return this.cartService.removeFromCart(removeFromCartDto.cartItemId, user);
+  }
+
+  @Delete('clear-cart')
+  @UseGuards(CombinedAuthGuard)
+  async clearCart(@Req() req: Request) {
+    const user = (req as any).user.sub;
+    return this.cartService.clearCart(user);
   }
 
   @Post('sync')

@@ -96,6 +96,7 @@ export class TokenService {
     return {
       accessToken,
       refreshToken,
+      status: 200,
       user: {
         id: user.id,
         email: user.email,

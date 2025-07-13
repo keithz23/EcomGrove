@@ -19,8 +19,13 @@ export const cartService = {
     return instance.patch(url, updateCart);
   },
 
-  removeFromCart: (id: string) => {
-    const url = `${EService.CART_SERVICE}/${id}`;
+  removeFromCart: (cartItemId: string) => {
+    const url = `${EService.CART_SERVICE}/${ECartService.REMOVE_FROM_CART}`;
+    return instance.delete(url, { data: { cartItemId } });
+  },
+
+  clearCart: () => {
+    const url = `${EService.CART_SERVICE}/${ECartService.CLEAR_CART}`;
     return instance.delete(url);
   },
 

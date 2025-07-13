@@ -258,6 +258,7 @@ async function seedCategories() {
 async function createFakeProducts() {
   const categories = await prisma.category.findMany();
   const users = await prisma.user.findMany();
+  const statuses = ['In Stock', 'Low Stock', 'Out of Stock'] as const;
 
   if (!categories.length || !users.length) {
     return;
@@ -267,6 +268,8 @@ async function createFakeProducts() {
     const randomCategory =
       categories[Math.floor(Math.random() * categories.length)];
     const randomAuthor = users[Math.floor(Math.random() * users.length)];
+    type Status = (typeof statuses)[number];
+    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
 
     await prisma.product.create({
       data: {
@@ -274,9 +277,11 @@ async function createFakeProducts() {
         description: faker.commerce.productDescription(),
         price: parseFloat(faker.commerce.price({ min: 10, max: 500 })),
         image: faker.image.url(),
-        isActive: faker.datatype.boolean(),
+        isActive: String(faker.datatype.boolean()),
+        stock: 1000,
         categoryId: randomCategory.id,
         authorId: randomAuthor.id,
+        status: randomStatus,
       },
     });
   }

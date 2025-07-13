@@ -6,34 +6,42 @@ export function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const pathname = url.pathname;
 
-  const hasAccess = !!accessToken;
+  const isAuthenticated = !!accessToken;
   const hasRefresh = !!refreshToken;
 
-  // if (pathname === "/admin/login" && hasAccess && hasRefresh) {
-  //   return NextResponse.redirect(new URL("/admin/dashboard", req.url));
-  // }
+  // ===== ADMIN ROUTES =====
+  if (pathname === "/admin/login") {
+    if (isAuthenticated && hasRefresh) {
+      return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+    }
+    return NextResponse.next();
+  }
 
-  // if (pathname === "/admin/login") {
-  //   return NextResponse.next();
-  // }
+  if (pathname.startsWith("/admin/")) {
+    if (!isAuthenticated && !hasRefresh) {
+      return NextResponse.redirect(new URL("/admin/login", req.url));
+    }
+    return NextResponse.next();
+  }
 
-  // if (pathname.startsWith("/admin/") && !hasAccess && hasRefresh) {
-  //   return NextResponse.next();
-  // }
-
-  // if (pathname.startsWith("/admin/") && !hasAccess && !hasRefresh) {
-  //   return NextResponse.redirect(new URL("/admin/login", req.url));
-  // }
-
+  // ===== PUBLIC ROUTES =====
   const publicRoutes = ["/login", "/signup", "/forgot"];
-  if (req.method === "GET" && publicRoutes.includes(pathname) && hasAccess) {
-    return NextResponse.redirect(new URL("/", req.url));
+  if (req.method === "GET" && publicRoutes.includes(pathname)) {
+    if (isAuthenticated) {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+    return NextResponse.next();
   }
 
-  if (pathname === "/profile" && !hasAccess && !hasRefresh) {
-    return NextResponse.redirect(new URL("/login", req.url));
+  // ===== PROFILE (Protected User Route) =====
+  if (pathname === "/profile") {
+    if (!isAuthenticated && !hasRefresh) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+    return NextResponse.next();
   }
 
+  // ===== DEFAULT =====
   return NextResponse.next();
 }
 

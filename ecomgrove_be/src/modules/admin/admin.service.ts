@@ -316,14 +316,8 @@ export class AdminService {
     picture: string,
     userId: string,
   ) {
-    const {
-      name,
-      categoryId,
-      price,
-      stock,
-      description,
-      isActive = true,
-    } = createProductDto;
+    const { name, categoryId, price, stock, description, isActive } =
+      createProductDto;
 
     try {
       const existingProduct = await this.prisma.product.findFirst({
@@ -334,21 +328,24 @@ export class AdminService {
         throw new BadRequestException('Product name already exists');
       }
 
-      const product = await this.prisma.product.create({
-        data: {
-          name,
-          price,
-          stock,
-          description,
-          isActive,
-          image: picture,
-          category: {
-            connect: { id: categoryId },
-          },
-          author: {
-            connect: { id: userId },
-          },
+      const productData = {
+        name,
+        price,
+        stock,
+        description,
+        isActive,
+        image: picture,
+        category: {
+          connect: { id: categoryId },
         },
+        author: {
+          connect: { id: userId },
+        },
+        status: 'In Stock',
+      };
+
+      const product = await this.prisma.product.create({
+        data: productData,
       });
 
       return product;
@@ -368,16 +365,24 @@ export class AdminService {
     picture: string,
     userId: string,
   ) {
-    const { id, name, categoryId, price, stock, description, isActive } =
-      updateProductDto;
+    const {
+      id,
+      name,
+      categoryId,
+      price,
+      stock,
+      description,
+      isActive,
+      status,
+    } = updateProductDto;
 
     try {
-      const existingProduct = await this.prisma.product.findFirst({
+      const existingProduct = await this.prisma.product.findUnique({
         where: { id },
       });
 
       if (!existingProduct) {
-        throw new NotFoundException(`Role with id ${id} not found`);
+        throw new NotFoundException(`Product with id ${id} not found`);
       }
 
       await this.prisma.product.update({
@@ -388,6 +393,7 @@ export class AdminService {
           stock,
           image: picture,
           description,
+          status,
           isActive,
           category: {
             connect: { id: categoryId },
@@ -433,8 +439,16 @@ export class AdminService {
     }
   }
 
-  async findAllProducts(page, limit, all) {
-    return this.productsService.findAllProduct(page, limit, all);
+  async findAllProducts(page, limit, all, sort, isAdmin, price, categories) {
+    return this.productsService.findAllProducts(
+      page,
+      limit,
+      all,
+      sort,
+      isAdmin,
+      price,
+      categories,
+    );
   }
 
   async findOneProduct(id) {

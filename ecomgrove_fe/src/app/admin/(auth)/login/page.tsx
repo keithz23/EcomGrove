@@ -15,7 +15,8 @@ type FormValues = {
 
 const AdminLoginLayout = () => {
   const router = useRouter();
-  const { isAdmin, login, isLoading, isAuthenticated } = useAuthStore();
+  const { login, isLoading, isAuthenticated } = useAuthStore();
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -28,7 +29,7 @@ const AdminLoginLayout = () => {
 
   useEffect(() => {
     if (isAdmin && isAuthenticated) {
-      router.replace("/admin/dashboard");
+      router.push("/admin/dashboard");
     }
   }, [isAdmin, isAuthenticated, router]);
 
@@ -40,7 +41,10 @@ const AdminLoginLayout = () => {
       toast.error("You do not have permission to access admin area.", {
         id: "no-admin-access",
       });
+      return;
     }
+
+    setIsAdmin(true);
 
     router.push("/admin/dashboard");
   };

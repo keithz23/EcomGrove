@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { Toaster } from "react-hot-toast";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Footer from "@/components/Footer/Footer";
 import SubHeader from "@/components/Header/SubHeader";
@@ -202,7 +201,6 @@ const LoginLayout = () => {
           </div>
         </div>
 
-        
         <Footer />
       </div>
     </>

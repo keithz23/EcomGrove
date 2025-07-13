@@ -4,21 +4,78 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { ESortType } from 'src/common/enums/ESortType';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAllProduct(page: number, limit: number, all) {
+  async findAllProducts(
+    page: number,
+    limit: number,
+    all: boolean,
+    sort: string,
+    isAdmin: boolean,
+    price?: number,
+    categories?: string | string[],
+  ) {
     const safePage = Math.max(1, page);
     const safeLimit = Math.min(Math.max(1, limit), 100);
     const skip = (safePage - 1) * safeLimit;
 
+    // Build dynamic filters
+    const where: any = {};
+
+    if (!isAdmin) {
+      where.isActive = 'true';
+    }
+    console.log(isAdmin);
+
+    if (typeof price === 'number') {
+      where.price = { lt: price };
+    }
+
+    if (categories) {
+      let categoryFilter: string[] = [];
+
+      if (Array.isArray(categories)) {
+        categoryFilter = categories;
+      } else if (typeof categories === 'string') {
+        categoryFilter = categories.split(',').map((c) => c.trim());
+      }
+
+      if (categoryFilter.length > 0) {
+        where.category = {
+          name: {
+            in: categoryFilter,
+            mode: 'insensitive',
+          },
+        };
+      }
+    }
+
+    // Sorting
+    let orderBy: any = {};
+    switch (sort) {
+      case 'high-to-low':
+        orderBy = { price: 'desc' };
+        break;
+      case 'low-to-high':
+        orderBy = { price: 'asc' };
+        break;
+      case 'new-added':
+        orderBy = { createdAt: 'desc' };
+        break;
+      default:
+        orderBy = {};
+    }
+
     try {
       if (all || limit === -1) {
         const productsData = await this.prisma.product.findMany({
-          orderBy: { createdAt: 'desc' },
+          where,
+          orderBy: Object.keys(orderBy).length > 0 ? orderBy : undefined,
           include: {
             category: {
               include: {
@@ -29,6 +86,17 @@ export class ProductsService {
           },
         });
 
+        for (const product of productsData) {
+          if (!product.statusManual) {
+            product.status =
+              product.stock === 0
+                ? 'Out of Stock'
+                : product.stock <= 5
+                  ? 'Low Stock'
+                  : 'In Stock';
+          }
+        }
+
         return {
           message: 'All products fetched successfully',
           currentPage: 1,
@@ -37,17 +105,31 @@ export class ProductsService {
           data: productsData,
         };
       }
+
       const [productsData, total] = await Promise.all([
         this.prisma.product.findMany({
           skip,
           take: safeLimit,
-          orderBy: { createdAt: 'desc' },
+          where,
+          orderBy: Object.keys(orderBy).length > 0 ? orderBy : undefined,
           include: {
             category: true,
+            author: true,
           },
         }),
-        this.prisma.product.count(),
+        this.prisma.product.count({ where }),
       ]);
+
+      for (const product of productsData) {
+        if (!product.statusManual) {
+          product.status =
+            product.stock === 0
+              ? 'Out of Stock'
+              : product.stock <= 5
+                ? 'Low Stock'
+                : 'In Stock';
+        }
+      }
 
       return {
         message: 'Products fetched successfully',
@@ -65,7 +147,7 @@ export class ProductsService {
         throw error;
       }
       throw new InternalServerErrorException(
-        'An unexpected error occured while fetching all products data',
+        'An unexpected error occurred while fetching all products data',
       );
     }
   }
@@ -74,6 +156,9 @@ export class ProductsService {
     try {
       const product = await this.prisma.product.findFirst({
         where: { id },
+        include: {
+          category: true,
+        },
       });
       if (!product) {
         throw new NotFoundException(`Product with id ${id} not found`);

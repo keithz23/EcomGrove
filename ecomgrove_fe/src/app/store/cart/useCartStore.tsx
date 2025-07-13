@@ -16,14 +16,17 @@ interface CartItem {
 interface CartState {
   cart: CartItem[];
   isCartOpen: boolean;
+  loading: boolean;
+  error: string | null;
 
   openCart: () => void;
   closeCart: () => void;
 
-  addToCart: (item: CartItem) => void;
+  addToCart: (item: CartItem) => Promise<void>;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
-  loadCartFromServer: () => Promise<void>;
+
+  fetchCart: () => Promise<void>;
   syncGuestCartToServer: (guestCart: CartItem[]) => Promise<void>;
 
   getTotalPrice: () => number;
@@ -32,11 +35,13 @@ interface CartState {
 export const useCartStore = create<CartState>()((set, get) => ({
   cart: [],
   isCartOpen: false,
+  loading: false,
+  error: null,
 
   openCart: () => set({ isCartOpen: true }),
   closeCart: () => set({ isCartOpen: false }),
 
-  addToCart: (item) => {
+  addToCart: async (item) => {
     const cart = get().cart;
     const exists = cart.find((p) => p.id === item.id);
     let updatedCart: CartItem[];
@@ -47,16 +52,21 @@ export const useCartStore = create<CartState>()((set, get) => ({
       );
       toast.success("Product quantity updated");
     } else {
-      updatedCart = [...cart, { ...item, quantity: 1 }];
+      updatedCart = [...cart, { ...item, quantity: item.quantity }];
       toast.success("Product added to cart");
     }
 
     set({ cart: updatedCart });
 
-    cartService.addToCart({
-      productId: item.id,
-      quantity: 1,
-    });
+    try {
+      await cartService.addToCart({
+        productId: item.id,
+        quantity: item.quantity,
+      });
+    } catch (err) {
+      console.error("Failed to sync addToCart", err);
+      toast.error("Failed to add to cart");
+    }
   },
 
   removeFromCart: (id) => {
@@ -69,7 +79,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
 
   clearCart: () => {
     set({ cart: [] });
-    fetch("/api/cart/clear", { method: "DELETE" });
+    cartService.clearCart();
     toast.success("Cart cleared");
   },
 
@@ -80,10 +90,11 @@ export const useCartStore = create<CartState>()((set, get) => ({
     );
   },
 
-  loadCartFromServer: async () => {
+  fetchCart: async () => {
+    set({ loading: true, error: null });
     try {
       const res = await cartService.getCartByUser();
-      const serverCart = await res.data;
+      const serverCart = res?.data ?? [];
 
       const normalized = serverCart.map((item: any) => ({
         id: item.productId,
@@ -95,10 +106,12 @@ export const useCartStore = create<CartState>()((set, get) => ({
       }));
 
       set({ cart: normalized });
-      toast.success("Cart loaded from server");
-    } catch (err) {
-      console.error("Failed to load cart", err);
-      toast.error("Failed to load cart");
+    } catch (err: any) {
+      console.error("Failed to fetch cart", err);
+      set({ error: err?.message || "Failed to fetch cart" });
+      toast.error("Failed to fetch cart");
+    } finally {
+      set({ loading: false });
     }
   },
 

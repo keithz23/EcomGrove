@@ -14,7 +14,6 @@ export default function TopHeader() {
   const dropdownItemClass = "px-4 py-2 cursor-pointer hover:bg-gray-100";
   const handleLogout = () => {
     logout();
-    router.push("/login");
   };
   return (
     <div className="w-full px-3 sm:px-5 mx-auto text-xs sm:text-sm bg-white shadow-sm mb-1 hidden lg:block">

@@ -1,0 +1,43 @@
+name: Deploy FE & BE to EC2 with PM2
+
+on:
+  push:
+    pull_request:
+      target: main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Navigate project folder on EC2
+            cd /var/www/ecomgrove
+
+            # Pull the latest changes from the staging branch
+            git fetch origin
+            git checkout feat/add-staging
+            git pull origin feat/add-staging
+
+            # Pull latest changes
+            git pull origin feat/add-staging
+
+            # Backend deployment
+            cd ecomgrove-be
+            npm install
+            pm2 restart ecomgrove-be || pm2 start ecosystem.config.js --only backend
+
+            # Frontend deployment
+            cd ../ecomgrove-fe
+            npm install
+            npm run build
+            pm2 restart ecomgrove-fe || pm2 start ecosystem.config.js --only frontend
