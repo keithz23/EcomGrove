@@ -11,6 +11,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { RefreshJwtStrategy } from './strategies/jwt-refresh.strategy';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
+import { MailService } from '../mail/mail.service';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { RefreshTokenGuard } from './guards/refresh-token.guard';
   providers: [
     AuthService,
     PrismaService,
+    MailService,
     TokenService,
     JwtStrategy,
     JwtAuthGuard,

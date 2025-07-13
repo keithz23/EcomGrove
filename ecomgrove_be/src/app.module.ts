@@ -19,6 +19,7 @@ import { RolesModule } from './modules/roles/roles.module';
 import { UsersModule } from './modules/users/users.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CartModule } from './modules/cart/cart.module';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { CartModule } from './modules/cart/cart.module';
     UsersModule,
     CartModule,
     AdminModule,
+    MailModule,
   ],
   providers: [AppService],
 })

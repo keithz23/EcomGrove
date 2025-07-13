@@ -15,17 +15,12 @@ import { AuthResponse } from "@/app/types/auth/auth.inteface";
 
 type FormValues = {
   email: string;
-  password: string;
 };
 
-const callBackUrl = process.env.NEXT_PUBLIC_CALLBACK_URL ?? "";
-
-const LoginLayout = () => {
+const ForgotLayout = () => {
   const router = useRouter();
-  const login = useAuthStore((state) => state.login);
   const isLoading = useAuthStore((state) => state.isLoading);
   const { isScrolledY } = useWindowEvents();
-  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -35,12 +30,7 @@ const LoginLayout = () => {
     mode: "onBlur",
   });
 
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    const response = (await login(data.email, data.password)) as AuthResponse;
-    if (response.status == 200 && response.data.user) {
-      router.push("/");
-    }
-  };
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {};
 
   return (
     <>
@@ -74,7 +64,7 @@ const LoginLayout = () => {
               <span className="relative after:content-['•'] after:mx-2 after:text-soft-gray">
                 Home
               </span>
-              <span>My Account</span>
+              <span>Forgot Password</span>
             </div>
           </div>
 
@@ -91,18 +81,6 @@ const LoginLayout = () => {
                 Create a free account
               </Link>
             </p>
-
-            <div className="flex justify-center mb-4 sm:mb-5">
-              <Link href={`${callBackUrl}`}>
-                <Button variant={"outline"} className="px-10 py-7">
-                  <img
-                    src="https://shofy-svelte.vercel.app/img/icon/login/google.svg"
-                    alt=""
-                  />
-                  Sign in with Google
-                </Button>
-              </Link>
-            </div>
 
             <div className="mb-4 text-sm text-center text-gray-400 sm:mb-5">
               or Sign in with Email
@@ -129,42 +107,6 @@ const LoginLayout = () => {
                 {errors.email && (
                   <span className="text-red-500 text-xs mt-1.5">
                     {errors.email.message}
-                  </span>
-                )}
-              </div>
-
-              <div className="mb-4 sm:mb-5">
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    label="Your Password"
-                    {...register("password", {
-                      required: "Password is required",
-                      minLength: {
-                        value: 6,
-                        message: "Password must be at least 6 characters",
-                      },
-                    })}
-                    className={`${
-                      errors.password ? "border-red-400 ring-red-200" : ""
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    className="absolute text-gray-400 transform -translate-y-1/2 cursor-pointer right-3 top-1/2"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOffIcon size={18} />
-                    ) : (
-                      <EyeIcon size={18} />
-                    )}
-                  </button>
-                </div>
-                {errors.password && (
-                  <span className="text-red-500 text-xs mt-1.5">
-                    {errors.password.message}
                   </span>
                 )}
               </div>
@@ -207,4 +149,4 @@ const LoginLayout = () => {
   );
 };
 
-export default LoginLayout;
+export default ForgotLayout;

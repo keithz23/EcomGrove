@@ -1,15 +1,15 @@
 "use client";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
-import { useAuthStore } from "../store/auth/useAuthStore";
-import SubHeader from "@/components/Header/SubHeader";
+import React from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Image from "next/image";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
+import SubHeader from "@/components/Header/SubHeader";
 import Footer from "@/components/Footer/Footer";
+import { authService } from "../services/public/auth.service";
 
 type FormValues = {
   email: string;
@@ -17,29 +17,37 @@ type FormValues = {
 
 export default function Forgot() {
   const router = useRouter();
-  const login = useAuthStore((state) => state.login);
-  const isLoading = useAuthStore((state) => state.isLoading);
-  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
+    reset,
   } = useForm<FormValues>({
     mode: "onBlur",
   });
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    // await login(data.email, data.password);
-    router.push("/");
+    try {
+      const response = await authService.forgot(data.email);
+      if (response.status === 201) {
+        toast.success("Email sent successfully");
+        reset(); // Reset form on success
+      } else {
+        toast.error("Something went wrong");
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(
+        error?.response?.data?.message?.[0] || "Failed to send email"
+      );
+    }
   };
+
   return (
     <>
       <div className="overflow-x-hidden">
-        <div
-          className={`sticky top-0 z-50 w-full bg-white shadow-lg transition-transform duration-300 ease-in-out
-          `}
-        >
+        <div className="sticky top-0 z-50 w-full bg-white shadow-lg transition-transform duration-300 ease-in-out">
           <SubHeader />
         </div>
 
@@ -101,17 +109,17 @@ export default function Forgot() {
 
               <Button
                 type="submit"
-                variant={"blue"}
-                size={"lg"}
+                variant="blue"
+                size="lg"
                 className="w-full p-8"
-                disabled={isLoading}
+                disabled={isSubmitting}
               >
-                {isLoading ? "Processing..." : "Send Mail"}
+                {isSubmitting ? "Processing..." : "Send Mail"}
               </Button>
 
               <div className="flex items-center justify-center gap-2 my-8 text-md sm:mb-6">
                 <label>Remember Password?</label>
-                <Link href={"/login"}>
+                <Link href="/login">
                   <p className="text-electric-blue font-semibold">Login</p>
                 </Link>
               </div>
@@ -119,9 +127,9 @@ export default function Forgot() {
           </div>
         </div>
 
-        
         <Footer />
       </div>
+      <Toaster />
     </>
   );
 }
