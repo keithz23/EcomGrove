@@ -170,14 +170,15 @@ model Category {
 }
 
 model Product {
-  id          String  @id @default(cuid())
-  name        String
-  description String?
-  price       Float
-  image       String?
-  stock       Int     @default(0)
-  isActive    String  @map("is_active")
-  status      String
+  id           String  @id @default(cuid())
+  name         String
+  description  String?
+  price        Float
+  image        String?
+  stock        Int     @default(0)
+  isActive     String  @map("is_active")
+  status       String
+  statusManual Boolean @default(false)
 
   // Relations
   categoryId String   @map("category_id")

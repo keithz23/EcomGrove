@@ -137,6 +137,7 @@ export const ProductsContent: React.FC = () => {
     page,
     limit,
     "false",
+    true,
     undefined,
     undefined,
     selectedCategories

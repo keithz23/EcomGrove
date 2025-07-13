@@ -7,6 +7,7 @@ export default function useProducts(
   page: number,
   limit: number,
   all: string,
+  isAdmin: boolean,
   price?: number,
   sort?: string,
   categories?: string[]
@@ -26,6 +27,7 @@ export default function useProducts(
         page,
         limit,
         all,
+        isAdmin,
         sort,
         price ?? undefined,
         categories
@@ -44,7 +46,7 @@ export default function useProducts(
     } finally {
       setLoading(false);
     }
-  }, [page, limit, all, price, sort, categories]);
+  }, [page, limit, all, price, isAdmin, sort, categories]);
 
   useEffect(() => {
     fetchProducts();

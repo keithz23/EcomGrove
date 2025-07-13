@@ -439,12 +439,13 @@ export class AdminService {
     }
   }
 
-  async findAllProducts(page, limit, all, sort, price, categories) {
-    return this.productsService.findAllProduct(
+  async findAllProducts(page, limit, all, sort, isAdmin, price, categories) {
+    return this.productsService.findAllProducts(
       page,
       limit,
       all,
       sort,
+      isAdmin,
       price,
       categories,
     );

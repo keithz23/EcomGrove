@@ -79,6 +79,7 @@ export default function Products() {
     currentPage,
     limit,
     "false",
+    false,
     appliedPrice ?? undefined,
     sortingType,
     activeCategory ?? undefined

@@ -11,11 +11,12 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAllProduct(
+  async findAllProducts(
     page: number,
     limit: number,
     all: boolean,
     sort: string,
+    isAdmin: boolean,
     price?: number,
     categories?: string | string[],
   ) {
@@ -25,6 +26,12 @@ export class ProductsService {
 
     // Build dynamic filters
     const where: any = {};
+
+    if (!isAdmin) {
+      where.isActive = 'true';
+    }
+    console.log(isAdmin);
+
     if (typeof price === 'number') {
       where.price = { lt: price };
     }
@@ -79,6 +86,17 @@ export class ProductsService {
           },
         });
 
+        for (const product of productsData) {
+          if (!product.statusManual) {
+            product.status =
+              product.stock === 0
+                ? 'Out of Stock'
+                : product.stock <= 5
+                  ? 'Low Stock'
+                  : 'In Stock';
+          }
+        }
+
         return {
           message: 'All products fetched successfully',
           currentPage: 1,
@@ -96,10 +114,22 @@ export class ProductsService {
           orderBy: Object.keys(orderBy).length > 0 ? orderBy : undefined,
           include: {
             category: true,
+            author: true,
           },
         }),
         this.prisma.product.count({ where }),
       ]);
+
+      for (const product of productsData) {
+        if (!product.statusManual) {
+          product.status =
+            product.stock === 0
+              ? 'Out of Stock'
+              : product.stock <= 5
+                ? 'Low Stock'
+                : 'In Stock';
+        }
+      }
 
       return {
         message: 'Products fetched successfully',

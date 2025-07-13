@@ -7,6 +7,7 @@ export const productService = {
     page: number,
     limit: number,
     all: string,
+    isAdmin: boolean,
     sort?: string,
     price?: number,
     categories?: string
@@ -30,6 +31,10 @@ export const productService = {
 
     if (categories) {
       params.append("categories", categories.toString());
+    }
+
+    if (isAdmin) {
+      params.append("isAdmin", isAdmin.toString());
     }
 
     const url = `${EService.PRODUCT_SERVICE}/${

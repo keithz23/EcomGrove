@@ -247,6 +247,7 @@ export class AdminController {
     @Query('limit') limit: number = 10,
     @Query('all') all: string = 'false',
     @Query('sort') sort: string,
+    @Query('isAdmin') isAdmin: boolean,
     @Query('price') price?: number,
     @Query('categories') categories?: string[],
   ) {
@@ -256,6 +257,7 @@ export class AdminController {
       +limit,
       isAll,
       sort,
+      isAdmin,
       price,
       categories,
     );
