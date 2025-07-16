@@ -43,24 +43,27 @@ export class CategoriesService {
     const skip = (safePage - 1) * safeLimit;
 
     try {
-      if (all || limit == -1) {
+      if (all || limit === -1) {
         const categoriesData = await this.prisma.category.findMany({
           orderBy: { createdAt: 'desc' },
           include: {
-            products: {
-              include: {
-                author: true,
-              },
+            _count: {
+              select: { products: true },
             },
           },
         });
+
+        const formattedData = categoriesData.map((category) => ({
+          ...category,
+          productCount: category._count.products,
+        }));
 
         return {
           message: 'All categories fetched successfully',
           currentPage: 1,
           totalPages: 1,
-          totalItems: categoriesData.length,
-          data: categoriesData,
+          totalItems: formattedData.length,
+          data: formattedData,
         };
       }
 
@@ -70,20 +73,25 @@ export class CategoriesService {
           take: safeLimit,
           orderBy: { createdAt: 'desc' },
           include: {
-            products: {
-              include: { author: true },
+            _count: {
+              select: { products: true },
             },
           },
         }),
         this.prisma.category.count(),
       ]);
 
+      const formattedData = categoriesData.map((category) => ({
+        ...category,
+        productCount: category._count.products,
+      }));
+
       return {
         message: 'Categories fetched successfully',
         currentPage: safePage,
         totalPages: Math.ceil(total / safeLimit),
         totalItems: total,
-        data: categoriesData,
+        data: formattedData,
       };
     } catch (error) {
       console.error('Error while fetching all categories data:', error);

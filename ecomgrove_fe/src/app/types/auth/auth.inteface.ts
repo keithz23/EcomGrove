@@ -15,3 +15,9 @@ export interface LoginWithGoogleResponse {
   crendential: string;
   selectBy?: string;
 }
+
+export interface IResetPassword {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}

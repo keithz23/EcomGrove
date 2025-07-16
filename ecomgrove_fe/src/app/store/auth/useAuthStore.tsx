@@ -1,4 +1,3 @@
-// stores/authStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import toast from "react-hot-toast";
@@ -12,6 +11,7 @@ interface AuthState {
   isLoading: boolean;
   hasCheckedAuth: boolean;
   user: User | null;
+  isAdmin: boolean;
 
   signup: (formData: IUserSignup) => Promise<AuthResponse | void>;
   login: (email: string, password: string) => Promise<AuthResponse | void>;
@@ -26,6 +26,7 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       hasCheckedAuth: false,
       user: null,
+      isAdmin: false,
 
       signup: async (formData) => {
         set({ isLoading: true });
@@ -46,22 +47,28 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (email, password) => {
         set({ isLoading: true });
+
         try {
           const response = await authService.login(email, password);
+          const user = response.data.data.user;
+
           set({
             isAuthenticated: true,
-            user: response.data.user,
+            user,
+            isAdmin: user.roles.includes("admin"),
             isLoading: false,
           });
-          toast.success("Login successful");
+
           return response.data as AuthResponse;
         } catch (error: unknown) {
           set({ isLoading: false });
-          if (error instanceof AxiosError && error.response?.data?.message) {
-            toast.error(error.response.data.message);
-          } else {
-            toast.error("Something went wrong");
-          }
+
+          const message =
+            error instanceof AxiosError && error.response?.data?.message
+              ? error.response.data.message
+              : "Something went wrong";
+
+          toast.error(message);
         }
       },
 
@@ -76,7 +83,6 @@ export const useAuthStore = create<AuthState>()(
             hasCheckedAuth: true,
           });
           toast.success("Logout successfully");
-          window.location.href = "/login";
         } catch (error: unknown) {
           set({ isLoading: false });
           if (error instanceof AxiosError && error.response) {

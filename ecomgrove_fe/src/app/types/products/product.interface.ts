@@ -8,5 +8,7 @@ export interface IProducts {
   image: string;
   stock: number;
   createdAt: string;
+  status?: string;
+  isActive?: string;
   category: ICategories;
 }

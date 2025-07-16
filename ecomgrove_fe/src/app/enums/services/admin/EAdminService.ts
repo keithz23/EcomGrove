@@ -1,6 +1,6 @@
 export enum EAdminService {
   USERS = "users",
-  PRODUCTS = "products",
+  PRODUCT = "product",
   CATEGORIES = "categories",
   ROLES = "roles",
   PERMISSIONS = "permissions",

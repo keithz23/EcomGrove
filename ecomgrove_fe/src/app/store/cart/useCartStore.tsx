@@ -52,7 +52,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
       );
       toast.success("Product quantity updated");
     } else {
-      updatedCart = [...cart, { ...item, quantity: 1 }];
+      updatedCart = [...cart, { ...item, quantity: item.quantity }];
       toast.success("Product added to cart");
     }
 
@@ -61,7 +61,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
     try {
       await cartService.addToCart({
         productId: item.id,
-        quantity: 1,
+        quantity: item.quantity,
       });
     } catch (err) {
       console.error("Failed to sync addToCart", err);
@@ -95,7 +95,6 @@ export const useCartStore = create<CartState>()((set, get) => ({
     try {
       const res = await cartService.getCartByUser();
       const serverCart = res?.data ?? [];
-      console.log(serverCart);
 
       const normalized = serverCart.map((item: any) => ({
         id: item.productId,

@@ -6,5 +6,7 @@ export enum EAuthService {
   CHANGE_PASSWORD = "change-password",
   GOOGLE_SERVICE = "redirect",
   CHECKAUTH_SERVICE = "check-auth",
+  FORGOT_PASSWORD = "forgot-password",
+  RESET_PASSWORD = "reset-password",
   REFRESH = "refresh",
 }

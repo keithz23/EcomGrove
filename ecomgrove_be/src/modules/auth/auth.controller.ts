@@ -22,6 +22,8 @@ import { TokenService } from '../token/token.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CombinedAuthGuard } from './guards/combined.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 const clientUrl =
   process.env.NODE_ENV == 'development'
@@ -88,11 +90,13 @@ export class AuthController {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      // path: '/auth/refresh-token',
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
-    return { user };
+    return {
+      status: 200,
+      data: { user },
+    };
   }
 
   @Post('refresh')
@@ -182,5 +186,15 @@ export class AuthController {
     });
 
     return res.status(200).json({ message: 'Successfully logged out' });
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto);
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
   }
 }
