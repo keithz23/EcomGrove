@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { Toaster } from "react-hot-toast";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Footer from "@/components/Footer/Footer";
 import SubHeader from "@/components/Header/SubHeader";
@@ -19,7 +18,23 @@ type FormValues = {
   password: string;
 };
 
-const callBackUrl = process.env.NEXT_PUBLIC_CALLBACK_URL ?? "";
+const config = {
+  development: {
+    callbackUrl: "http://localhost:8000/api/v1/auth/redirect",
+    apiUrl: "http://localhost:8000",
+  },
+  production: {
+    callbackUrl: process.env.NEXT_PUBLIC_CALLBACK_URL || "",
+    apiUrl: process.env.NEXT_PUBLIC_API_URL || "",
+  },
+};
+
+const getCallbackUrl = () => {
+  const isDev = process.env.NODE_ENV === "development";
+  const currentConfig = isDev ? config.development : config.production;
+
+  return currentConfig.callbackUrl;
+};
 
 const LoginLayout = () => {
   const router = useRouter();
@@ -40,6 +55,20 @@ const LoginLayout = () => {
     const response = (await login(data.email, data.password)) as AuthResponse;
     if (response.status == 200 && response.data.user) {
       router.push("/");
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    try {
+      const callbackUrl = getCallbackUrl();
+      if (!callbackUrl) {
+        console.error("Callback URL is not configured");
+        return;
+      }
+
+      window.location.href = callbackUrl;
+    } catch (error) {
+      console.error("Error during Google login:", error);
     }
   };
 
@@ -94,15 +123,18 @@ const LoginLayout = () => {
             </p>
 
             <div className="flex justify-center mb-4 sm:mb-5">
-              <Link href={`${callBackUrl}`}>
-                <Button variant={"outline"} className="px-10 py-7">
-                  <img
-                    src="https://shofy-svelte.vercel.app/img/icon/login/google.svg"
-                    alt=""
-                  />
-                  Sign in with Google
-                </Button>
-              </Link>
+              <Button
+                variant={"outline"}
+                className="px-10 py-7"
+                onClick={handleGoogleLogin}
+                type="button"
+              >
+                <img
+                  src="https://shofy-svelte.vercel.app/img/icon/login/google.svg"
+                  alt="Google"
+                />
+                Sign in with Google
+              </Button>
             </div>
 
             <div className="mb-4 text-sm text-center text-gray-400 sm:mb-5">
@@ -202,7 +234,6 @@ const LoginLayout = () => {
           </div>
         </div>
 
-        
         <Footer />
       </div>
     </>
