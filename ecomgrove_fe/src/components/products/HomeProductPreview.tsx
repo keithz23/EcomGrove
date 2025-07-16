@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 import Link from "next/link";
 
 export default function HomeProductPreview() {
-  const { products, loading, error } = useProducts(1, 6, "false");
+  const { products, loading, error } = useProducts(1, 6, "false", false);
 
   if (loading) {
     return <div className="text-center py-8">Loading products...</div>;
@@ -30,6 +30,7 @@ export default function HomeProductPreview() {
         currentPage={1}
         limit={6}
         totalPages={1}
+        onPageChange={() => {}}
       />
 
       <div className="mt-6 text-center">
