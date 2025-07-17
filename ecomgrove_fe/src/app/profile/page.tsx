@@ -1,6 +1,6 @@
 "use client";
 import { Camera } from "lucide-react";
-import { JSX, useState } from "react";
+import { JSX, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useAuthStore } from "../store/auth/useAuthStore";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,7 @@ import {
   InformationFields,
 } from "../types/profile/profile.interface";
 import Image from "next/image";
+import useProfile from "../hooks/useProfile";
 
 type FormValues = {
   oldPassword: string;
@@ -36,6 +37,7 @@ type InformationFormValues = {
 };
 
 export default function Profile() {
+  const { profile } = useProfile();
   const [isModalUploadOpen, setIsModalUploadOpen] = useState(false);
   const [isActive, setIsActive] = useState<string>("Profile");
   const [isInputActive, setIsInputActive] = useState<string>("");
@@ -54,8 +56,20 @@ export default function Profile() {
     register: registerInfo,
     handleSubmit: handleInfoSubmit,
     formState: { errors: infoErrors },
-    setValue: setInfoValue,
+    reset,
   } = useForm<InformationFormValues>({ mode: "onBlur" });
+
+  useEffect(() => {
+    if (profile) {
+      reset({
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        username: profile.username || "",
+        email: profile.email || "",
+        phoneNumber: profile.phone || "",
+      });
+    }
+  }, [profile, reset]);
 
   const handleModalUpload = () => setIsModalUploadOpen(!isModalUploadOpen);
 
@@ -77,7 +91,10 @@ export default function Profile() {
           <div className="flex gap-x-4 items-center">
             <div className="relative w-20 h-20" onClick={handleModalUpload}>
               <Image
-                src={`https://vn4u.vn/wp-content/uploads/2023/09/logo-co-tinh-nhat-quan-2.png`}
+                src={`${
+                  profile?.picture ||
+                  "https://doodleipsum.com/700/avatar?i=bc3a7b2ecb91d1a6c511a620968c8a06"
+                }`}
                 alt="Profile picture"
                 referrerPolicy="no-referrer"
                 width={80}
@@ -88,7 +105,9 @@ export default function Profile() {
                 <Camera className="h-4 w-4 text-white" />
               </div>
             </div>
-            <span className="text-2xl font-semibold">Welcome!</span>
+            <span className="text-2xl font-semibold">
+              Welcome, {profile?.username}!
+            </span>
           </div>
           <button
             className="px-4 py-2 border border-gray-300 cursor-pointer hover:bg-electric-blue hover:text-white transition"

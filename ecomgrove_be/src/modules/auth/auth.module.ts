@@ -12,11 +12,14 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { RefreshJwtStrategy } from './strategies/jwt-refresh.strategy';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { MailService } from '../mail/mail.service';
+import { PermissionService } from './permissions.service';
+import { PermissionModule } from './permissions.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    PermissionModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
@@ -40,6 +43,7 @@ import { MailService } from '../mail/mail.service';
     JwtStrategy,
     JwtAuthGuard,
     GoogleStrategy,
+    PermissionService,
     RefreshJwtStrategy,
     RefreshTokenGuard,
   ],

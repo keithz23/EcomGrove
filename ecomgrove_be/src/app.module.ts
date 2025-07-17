@@ -12,7 +12,6 @@ import { CouponModule } from './modules/coupon/coupon.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
-import { PermissionsModule } from './modules/permissions/permissions.module';
 import { ProductsModule } from './modules/products/products.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { RolesModule } from './modules/roles/roles.module';
@@ -20,6 +19,8 @@ import { UsersModule } from './modules/users/users.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CartModule } from './modules/cart/cart.module';
 import { MailModule } from './modules/mail/mail.module';
+import { PermissionModule } from './modules/auth/permissions.module';
+import { PermissionsModule } from './modules/permissions/permissions.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { MailModule } from './modules/mail/mail.module';
     NotificationsModule,
     OrdersModule,
     PaymentsModule,
+    PermissionModule,
     PermissionsModule,
     ProductsModule,
     ReviewsModule,

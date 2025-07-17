@@ -201,4 +201,28 @@ export class AuthService {
       );
     }
   }
+
+  async profile(userId: string) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      return {
+        data: user,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+
+      console.error('Error fetching user profile:', error);
+
+      throw new InternalServerErrorException(
+        'An unexpected error occurred while fetching user data',
+      );
+    }
+  }
 }

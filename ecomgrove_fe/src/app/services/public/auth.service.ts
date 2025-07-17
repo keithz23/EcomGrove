@@ -23,7 +23,7 @@ export const authService = {
 
   profile: () => {
     const url = `${EService.AUTH_SERVICE}/${EAuthService.PROFILE_SERVICE}`;
-    return instance.get(url);
+    return instance.post(url);
   },
 
   changePassword: (payload: IChangePassword, headers: AxiosRequestHeaders) => {

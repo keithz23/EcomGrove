@@ -24,6 +24,7 @@ import { CombinedAuthGuard } from './guards/combined.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { SoftAuthGuard } from './guards/soft-auth.guard';
 
 const clientUrl =
   process.env.NODE_ENV == 'development'
@@ -112,7 +113,7 @@ export class AuthController {
     return this.tokenService.refreshToken(refreshTokenDto);
   }
 
-  @UseGuards(CombinedAuthGuard)
+  @UseGuards(SoftAuthGuard)
   @Get('check-auth')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('JWT-auth')
@@ -196,5 +197,12 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
+  }
+
+  @UseGuards(CombinedAuthGuard)
+  @Post('profile')
+  async profile(@Req() req: Request) {
+    const user = (req as any).user.sub;
+    return this.authService.profile(user);
   }
 }
