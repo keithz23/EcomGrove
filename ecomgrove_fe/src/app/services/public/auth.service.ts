@@ -26,9 +26,9 @@ export const authService = {
     return instance.post(url);
   },
 
-  changePassword: (payload: IChangePassword, headers: AxiosRequestHeaders) => {
+  changePassword: (payload: IChangePassword) => {
     const url = `${EService.AUTH_SERVICE}/${EAuthService.CHANGE_PASSWORD}`;
-    return instance.post(url, payload, { headers });
+    return instance.post(url, payload);
   },
 
   checkAuth: () => {

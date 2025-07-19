@@ -6,7 +6,7 @@ import AdSection from "@/components/common/AdSection";
 import Subscribe from "@/components/common/Subscribe";
 import TrendingProduct from "@/components/common/TrendingProduct";
 import Deal from "@/components/common/Deal";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { useAuthStore } from "./store/auth/useAuthStore";
 import { useEffect, useState } from "react";
 import { getErrorMessage } from "./utils/getMessageError.util";
@@ -100,8 +100,6 @@ export default function Home() {
         cartItemsCount={cartItemsCount}
         isLoading={isLoading}
       />
-
-      <Toaster />
     </div>
   );
 }

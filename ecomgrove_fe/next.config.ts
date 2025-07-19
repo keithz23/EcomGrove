@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
       "picsum.photos",
       "loremflickr.com",
       "doodleipsum.com",
+      "lh3.googleusercontent.com",
     ],
   },
 };

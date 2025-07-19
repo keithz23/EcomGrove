@@ -21,8 +21,11 @@ import {
 } from "../types/profile/profile.interface";
 import Image from "next/image";
 import useProfile from "../hooks/useProfile";
+import { getErrorMessage } from "../utils/getMessageError.util";
+import { authService } from "../services/public/auth.service";
+import toast from "react-hot-toast";
 
-type FormValues = {
+type ChangePasswordFormValues = {
   oldPassword: string;
   newPassword: string;
   confirmPassword: string;
@@ -37,6 +40,7 @@ type InformationFormValues = {
 };
 
 export default function Profile() {
+  const router = useRouter();
   const { profile } = useProfile();
   const [isModalUploadOpen, setIsModalUploadOpen] = useState(false);
   const [isActive, setIsActive] = useState<string>("Profile");
@@ -49,7 +53,7 @@ export default function Profile() {
     handleSubmit: handlePasswordSubmit,
     formState: { errors: passwordErrors },
     reset: resetPasswordForm,
-  } = useForm<FormValues>({ mode: "onBlur" });
+  } = useForm<ChangePasswordFormValues>({ mode: "onBlur" });
 
   // Form hooks for Information
   const {
@@ -75,14 +79,36 @@ export default function Profile() {
 
   const handleLogout = () => {
     logout();
-    useRouter().push("/login");
+    router.push("/login");
   };
 
   const handleActiveTab = (tab: string) => setIsActive(tab);
 
   const handleActiveInput = (input: string) => setIsInputActive(input);
 
-  const handleChangePasswordSubmit = async (data: FormValues) => {};
+  const handleChangePasswordSubmit = async (data: ChangePasswordFormValues) => {
+    const { newPassword, confirmPassword } = data;
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Confirm password does not match");
+      return;
+    }
+
+    try {
+      const res = await authService.changePassword(data);
+      console.log(res);
+
+      if (res.status === 201) {
+        toast.success("Password changed successfully");
+        resetPasswordForm();
+        logout();
+        router.push("/login");
+      }
+    } catch (error) {
+      const msg = getErrorMessage(error);
+      toast.error(msg || "Failed to change password");
+    }
+  };
 
   const tabContent: Record<string, JSX.Element> = {
     Profile: (
@@ -196,11 +222,7 @@ export default function Profile() {
       <div className="p-5">
         <div className="flex flex-col border border-gray-200 p-7 shadow-2xl bg-white">
           <h2 className="text-2xl font-semibold mb-6">Change Password</h2>
-          <form
-            onSubmit={handlePasswordSubmit(async (data) => {
-              const result = await handleChangePasswordSubmit(data);
-            })}
-          >
+          <form onSubmit={handlePasswordSubmit(handleChangePasswordSubmit)}>
             {ChangePasswordInput.map((row) => (
               <div
                 key={row.id}
@@ -222,21 +244,26 @@ export default function Profile() {
                       type={field.type}
                       label={field.label}
                       className={`${
-                        passwordErrors[field.name as keyof FormValues]
+                        passwordErrors[
+                          field.name as keyof ChangePasswordFormValues
+                        ]
                           ? "border-red-500"
                           : ""
                       }`}
                       {...register(
-                        field.name as keyof FormValues,
+                        field.name as keyof ChangePasswordFormValues,
                         field.validations
                       )}
                     />
 
-                    {passwordErrors[field.name as keyof FormValues] && (
+                    {passwordErrors[
+                      field.name as keyof ChangePasswordFormValues
+                    ] && (
                       <p className="text-red-500 text-xs mt-1">
                         {
-                          passwordErrors[field.name as keyof FormValues]
-                            ?.message
+                          passwordErrors[
+                            field.name as keyof ChangePasswordFormValues
+                          ]?.message
                         }
                       </p>
                     )}

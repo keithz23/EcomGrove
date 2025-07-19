@@ -12,6 +12,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useWindowEvents } from "@/app/hooks/useWindowsEvent";
 import { AuthResponse } from "@/app/types/auth/auth.inteface";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 type FormValues = {
   email: string;
@@ -52,9 +54,24 @@ const LoginLayout = () => {
   });
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    const response = (await login(data.email, data.password)) as AuthResponse;
-    if (response.status == 200 && response.data.user) {
-      router.push("/");
+    try {
+      const response = (await login(data.email, data.password)) as AuthResponse;
+
+      if (response.status === 200 && response.data.user) {
+        toast.success("Login successfully");
+        router.push("/");
+      }
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const message = error.response?.data?.message || "Login failed";
+
+        if (status === 401) {
+          toast.error("Invalid Credentials");
+        } else {
+          toast.error(message);
+        }
+      }
     }
   };
 
