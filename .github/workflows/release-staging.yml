@@ -2,7 +2,8 @@ name: Deploy FE (Next.js) & BE to EC2 with PM2
 
 on:
   pull_request:
-    target: main
+    branches:
+      - main
 
 jobs:
   deploy:
@@ -23,11 +24,17 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install & Build Next.js FE
+      - name: Install & Build FE
         working-directory: ./ecomgrove_fe
         run: |
           npm ci
           npm run build
+
+      - name: Debug - Check build files
+        run: |
+          ls -la
+          ls -la ecomgrove_fe
+          ls -la ecomgrove_fe/.next || echo "No .next found!"
 
       - name: Upload FE build to EC2
         uses: appleboy/scp-action@v0.1.4
