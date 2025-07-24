@@ -2,8 +2,8 @@ name: Deploy FE & BE to EC2 with PM2
 
 on:
   push:
-    pull_request:
-      target: main
+    branches:
+      - feat/add-staging
 
 jobs:
   deploy:
@@ -20,24 +20,22 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Navigate project folder on EC2
-            cd /var/www/ecomgrove
+            echo "Deploying EcomGrove..."
 
-            # Pull the latest changes from the staging branch
+            cd /var/www/EcomGrove || exit 1
+
+            echo "Pulling latest changes..."
             git fetch origin
             git checkout feat/add-staging
-            git pull origin feat/add-staging
+            git reset --hard origin/feat/add-staging
 
-            # Pull latest changes
-            git pull origin feat/add-staging
-
-            # Backend deployment
+            echo "Deploying backend..."
             cd ecomgrove-be
-            npm install
-            pm2 restart ecomgrove-be || pm2 start ecosystem.config.js --only backend
+            npm ci
+            pm2 start ecosystem.config.js --only backend || pm2 restart ecomgrove-be
 
-            # Frontend deployment
+            echo "Deploying frontend..."
             cd ../ecomgrove-fe
-            npm install
+            npm ci
             npm run build
-            pm2 restart ecomgrove-fe || pm2 start ecosystem.config.js --only frontend
+            pm2 start ecosystem.config.js --only frontend || pm2 restart ecomgrove-fe
