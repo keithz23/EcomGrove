@@ -49,7 +49,7 @@ jobs:
             npm ci --omit=dev
             pm2 restart ecomgrove-fe || pm2 start ecosystem.config.js --only frontend
 
-      - name: Deploy BE on EC2
+      - name: SSH & Deploy BE on EC2
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -60,5 +60,6 @@ jobs:
             git fetch origin
             git checkout feat/add-staging
             git reset --hard origin/feat/add-staging
+            cd ecomgrove-be
             npm ci
             pm2 restart ecomgrove-be || pm2 start ecosystem.config.js --only backend
