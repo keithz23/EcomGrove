@@ -18,10 +18,10 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install & Build FE (Next.js)
-        working-directory: /var/www/EcomGrove/ecomgrove-fe
+      - name: Install & Build Next.js FE
+        working-directory: ./ecomgrove-fe
         run: |
-          npm install
+          npm ci
           npm run build
 
       - name: Upload FE build to EC2
@@ -31,15 +31,15 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: |
-            /var/www/EcomGrove/ecomgrove-fe/.next
-            /var/www/EcomGrove/ecomgrove-fe/public
-            /var/www/EcomGrove/ecomgrove-fe/package.json
-            /var/www/EcomGrove/ecomgrove-fe/package-lock.json
-            /var/www/EcomGrove/ecomgrove-fe/next.config.js
-            /var/www/EcomGrove/ecomgrove-fe/ecosystem.config.js
+            ecomgrove-fe/.next
+            ecomgrove-fe/public
+            ecomgrove-fe/package.json
+            ecomgrove-fe/package-lock.json
+            ecomgrove-fe/next.config.js
+            ecomgrove-fe/ecosystem.config.js
           target: /var/www/EcomGrove/ecomgrove-fe
 
-      - name: SSH & Install/Restart Next.js on EC2
+      - name: SSH & Restart FE with PM2
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -47,9 +47,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /var/www/EcomGrove/ecomgrove-fe
-            npm install --production
+            npm ci --omit=dev
             pm2 restart ecomgrove-fe || pm2 start ecosystem.config.js --only frontend
-
 
       - name: Deploy BE on EC2
         uses: appleboy/ssh-action@v0.1.6
@@ -62,5 +61,5 @@ jobs:
             git fetch origin
             git checkout feat/add-staging
             git reset --hard origin/feat/add-staging
-            npm install
+            npm ci
             pm2 restart ecomgrove-be || pm2 start ecosystem.config.js --only backend
