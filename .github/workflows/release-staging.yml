@@ -18,7 +18,7 @@ jobs:
           node-version: 20
 
       - name: Install & Build Next.js FE
-        working-directory: ./ecomgrove-fe
+        working-directory: ./EcomGrove/ecomgrove-fe
         run: |
           npm ci
           npm run build
@@ -30,12 +30,12 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: |
-            ecomgrove-fe/.next
-            ecomgrove-fe/public
-            ecomgrove-fe/package.json
-            ecomgrove-fe/package-lock.json
-            ecomgrove-fe/next.config.js
-            ecomgrove-fe/ecosystem.config.js
+            EcomGrove/ecomgrove-fe/.next
+            EcomGrove/ecomgrove-fe/public
+            EcomGrove/ecomgrove-fe/package.json
+            EcomGrove/ecomgrove-fe/package-lock.json
+            EcomGrove/ecomgrove-fe/next.config.js
+            EcomGrove/ecomgrove-fe/ecosystem.config.jss
           target: /var/www/EcomGrove/ecomgrove-fe
 
       - name: SSH & Restart FE with PM2
