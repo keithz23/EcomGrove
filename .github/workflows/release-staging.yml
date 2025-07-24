@@ -13,27 +13,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Debug - check structure
-        run: |
-          pwd
-          ls -la
-          ls -la ecomgrove_fe
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Install & Build FE
-        working-directory: ./ecomgrove_fe
         run: |
+          cd ecomgrove_fe
           npm ci
           npm run build
-
-      - name: Debug - Check build files
-        run: |
-          ls -la ecomgrove_fe
-          ls -la ecomgrove_fe/.next || echo "No .next found"
 
       - name: Upload FE build to EC2
         uses: appleboy/scp-action@v0.1.4
@@ -42,17 +31,16 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: |
-            .next
-            public
-            package.json
-            package-lock.json
-            next.config.js
-            ecosystem.config.js
+            ecomgrove_fe/.next
+            ecomgrove_fe/public
+            ecomgrove_fe/package.json
+            ecomgrove_fe/package-lock.json
+            ecomgrove_fe/next.config.js
+            ecomgrove_fe/ecosystem.config.js
           target: /var/www/EcomGrove/ecomgrove_fe
           port: 22
-          strip_components: 0
+          strip_components: 1
           overwrite: true
-        working-directory: ./ecomgrove_fe
 
       - name: SSH & Restart FE with PM2
         uses: appleboy/ssh-action@v0.1.6
