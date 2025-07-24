@@ -2,8 +2,8 @@ name: Deploy FE & BE to EC2 with PM2
 
 on:
   push:
-    pull_request:
-      target: main
+    branches:
+      - main
 
 jobs:
   deploy:

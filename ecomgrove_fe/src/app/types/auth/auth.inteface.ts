@@ -21,3 +21,14 @@ export interface IResetPassword {
   newPassword: string;
   confirmPassword: string;
 }
+
+export interface IProfile {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  phone: string;
+  picture: string;
+  lastLoginAt: Date;
+}

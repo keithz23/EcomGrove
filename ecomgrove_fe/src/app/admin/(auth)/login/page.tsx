@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { EyeIcon, EyeOffIcon, ShieldCheckIcon } from "lucide-react";
 import { useAuthStore } from "@/app/store/auth/useAuthStore";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,7 @@ const AdminLoginLayout = () => {
       return;
     }
 
+    toast.success("Login successfully");
     setIsAdmin(true);
 
     router.push("/admin/dashboard");
@@ -180,7 +181,6 @@ const AdminLoginLayout = () => {
           </div>
         </div>
       </div>
-      <Toaster />
     </>
   );
 };

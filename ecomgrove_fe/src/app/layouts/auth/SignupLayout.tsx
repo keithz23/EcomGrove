@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useAuthStore } from "@/app/store/auth/useAuthStore";
@@ -177,7 +177,7 @@ export default function Signup() {
             </form>
           </div>
         </div>
-        
+
         <Footer />
       </div>
     </div>

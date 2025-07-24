@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
       "vn4u.vn",
       "picsum.photos",
       "loremflickr.com",
+      "doodleipsum.com",
+      "lh3.googleusercontent.com",
     ],
   },
 };

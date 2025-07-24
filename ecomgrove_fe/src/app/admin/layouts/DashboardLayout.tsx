@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { Toaster } from "react-hot-toast";
 
 export default function DashboardLayout() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -216,7 +215,6 @@ export default function DashboardLayout() {
           )}
         </main>
       </div>
-      <Toaster />
     </div>
   );
 }

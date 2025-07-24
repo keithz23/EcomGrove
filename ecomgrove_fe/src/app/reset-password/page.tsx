@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import SubHeader from "@/components/Header/SubHeader";
 import Footer from "@/components/Footer/Footer";
 import { authService } from "../services/public/auth.service";
@@ -192,7 +192,6 @@ export default function Reset() {
 
         <Footer />
       </div>
-      <Toaster />
     </>
   );
 }

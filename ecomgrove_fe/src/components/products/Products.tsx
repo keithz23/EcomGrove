@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import useProducts from "@/app/hooks/useProducts";
 import { ProductSortingType } from "@/app/constants/ProductData";
 import ProductCard from "./ProductCard";
-import { Toaster } from "react-hot-toast";
 import { Slider } from "../ui/slider";
 import { Button } from "../ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -384,8 +383,6 @@ export default function Products() {
           </section>
         </div>
       </div>
-
-      <Toaster />
     </>
   );
 }

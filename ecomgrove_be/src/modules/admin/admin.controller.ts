@@ -33,6 +33,7 @@ import { CreateProductDto } from './dto/products/create-product.dto';
 import { UpdateProductDto } from './dto/products/update-product.dto';
 import { CreateCategoryDto } from '../categories/dto/create-category.dto';
 import { UpdateCategoryDto } from '../categories/dto/update-category.dto';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 
 @Controller('admin')
 export class AdminController {
@@ -58,8 +59,8 @@ export class AdminController {
 
   @Patch('users/update-user')
   @ApiConsumes('multipart/form-data')
-  @UseGuards(CombinedAuthGuard)
-  @Permissions('user:read', 'user:create')
+  @UseGuards(CombinedAuthGuard, PermissionsGuard)
+  @Permissions('user:create')
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'picture', maxCount: 1 }], multerOptions),
   )

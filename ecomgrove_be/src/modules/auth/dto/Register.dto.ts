@@ -6,23 +6,23 @@ export class RegisterDto {
   @IsString()
   firstName: string;
 
-  @ApiProperty({default: 'Wong'})
+  @ApiProperty({ default: 'Wong' })
   @IsString()
   lastName: string;
 
-  @ApiProperty({default: 'lunez'})
+  @ApiProperty({ default: 'lunez' })
   @IsString()
   username: string;
 
-  @ApiProperty({default: '0904347832'})
+  @ApiProperty({ default: '0904347832' })
   @IsPhoneNumber('VN')
   phone: string;
 
-  @ApiProperty({default: 'abc@gmail.com'})
+  @ApiProperty({ default: 'abc@gmail.com' })
   @IsEmail()
   email: string;
 
-  @ApiProperty({default: 'Abc123@'})
+  @ApiProperty({ default: 'Abc123@' })
   @IsString()
   password: string;
 }

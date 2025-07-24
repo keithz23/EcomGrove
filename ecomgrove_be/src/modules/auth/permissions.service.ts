@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class PermissionsService {
+export class PermissionService {
   constructor(private prisma: PrismaService) {}
 
   async getUserPermissions(userId: string) {
