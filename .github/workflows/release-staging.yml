@@ -35,7 +35,7 @@ jobs:
             EcomGrove/ecomgrove-fe/package.json
             EcomGrove/ecomgrove-fe/package-lock.json
             EcomGrove/ecomgrove-fe/next.config.js
-            EcomGrove/ecomgrove-fe/ecosystem.config.jss
+            EcomGrove/ecomgrove-fe/ecosystem.config.js
           target: /var/www/EcomGrove/ecomgrove-fe
 
       - name: SSH & Restart FE with PM2
