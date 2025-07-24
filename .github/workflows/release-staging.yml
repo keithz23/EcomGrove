@@ -37,7 +37,7 @@ jobs:
             ecomgrove-fe/package-lock.json
             ecomgrove-fe/next.config.js
             ecomgrove-fe/ecosystem.config.js
-          target: /var/www/ecomgrove-fe
+          target: /var/www/EcomGrove/ecomgrove-fe
 
       - name: SSH & Install/Restart Next.js on EC2
         uses: appleboy/ssh-action@v0.1.6
