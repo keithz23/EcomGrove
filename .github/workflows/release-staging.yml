@@ -31,12 +31,12 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: |
-            ecomgrove-fe/.next
-            ecomgrove-fe/public
-            ecomgrove-fe/package.json
-            ecomgrove-fe/package-lock.json
-            ecomgrove-fe/next.config.js
-            ecomgrove-fe/ecosystem.config.js
+            /var/www/EcomGrove/ecomgrove-fe/.next
+            /var/www/EcomGrove/ecomgrove-fe/public
+            /var/www/EcomGrove/ecomgrove-fe/package.json
+            /var/www/EcomGrove/ecomgrove-fe/package-lock.json
+            /var/www/EcomGrove/ecomgrove-fe/next.config.js
+            /var/www/EcomGrove/ecomgrove-fe/ecosystem.config.js
           target: /var/www/EcomGrove/ecomgrove-fe
 
       - name: SSH & Install/Restart Next.js on EC2
