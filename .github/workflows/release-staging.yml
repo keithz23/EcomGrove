@@ -1,9 +1,8 @@
 name: Deploy FE (Next.js) & BE to EC2 with PM2
 
 on:
-  push:
-    branches:
-      - feat/add-staging
+  pull_request:
+    target: main
 
 jobs:
   deploy:
