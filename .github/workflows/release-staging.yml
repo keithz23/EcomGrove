@@ -19,7 +19,7 @@ jobs:
           node-version: 20
 
       - name: Install & Build FE (Next.js)
-        working-directory: ./ecomgrove-fe
+        working-directory: /var/www/EcomGrove/ecomgrove-fe
         run: |
           npm install
           npm run build
