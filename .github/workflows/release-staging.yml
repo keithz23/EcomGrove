@@ -1,5 +1,4 @@
 name: Deploy FE (Next.js) & BE to EC2 with PM2
-
 on:
   push:
     branches:
@@ -8,58 +7,122 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            ecomgrove-fe/package-lock.json
+            ecomgrove-be/package-lock.json
 
+      # Build Frontend trên GitHub Actions
       - name: Install & Build FE (Next.js)
         working-directory: ./ecomgrove-fe
         run: |
-          npm install
+          npm ci --prefer-offline
           npm run build
+          # Tạo tarball để giảm số lượng file transfer
+          tar -czf ../frontend-build.tar.gz .next public package.json package-lock.json next.config.js ecosystem.config.js
 
-      - name: Upload FE build to EC2
-        uses: appleboy/scp-action@v0.1.4
+      # Build Backend trên GitHub Actions (nếu cần)
+      - name: Install BE dependencies
+        working-directory: ./ecomgrove-be
+        run: |
+          npm ci --prefer-offline --omit=dev
+          tar -czf ../backend-deps.tar.gz node_modules
+
+      # Upload compressed files
+      - name: Upload compressed builds to EC2
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: |
-            ecomgrove-fe/.next
-            ecomgrove-fe/public
-            ecomgrove-fe/package.json
-            ecomgrove-fe/package-lock.json
-            ecomgrove-fe/next.config.js
-            ecomgrove-fe/ecosystem.config.js
-          target: /var/www/EcomGrove/ecomgrove-fe
+            frontend-build.tar.gz
+            backend-deps.tar.gz
+            ecomgrove-be
+          target: /tmp/deploy
+          tar: false
+          overwrite: true
 
-      - name: SSH & Install + Restart FE with PM2
-        uses: appleboy/ssh-action@v0.1.6
+      # Deploy Frontend
+      - name: Deploy Frontend with PM2
+        uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 10m
           script: |
+            # Tạo backup nhanh (optional)
+            if [ -d "/var/www/EcomGrove/ecomgrove-fe" ]; then
+              sudo mv /var/www/EcomGrove/ecomgrove-fe /var/www/EcomGrove/ecomgrove-fe.backup.$(date +%s)
+            fi
+            
+            # Tạo thư mục và extract
+            sudo mkdir -p /var/www/EcomGrove/ecomgrove-fe
             cd /var/www/EcomGrove/ecomgrove-fe
-            npm install --omit=dev
-            pm2 restart ecomgrove-fe || pm2 start ecosystem.config.js --only frontend
+            sudo tar -xzf /tmp/deploy/frontend-build.tar.gz
+            sudo chown -R $USER:$USER /var/www/EcomGrove/ecomgrove-fe
+            
+            # Restart PM2 (graceful restart để tránh downtime)
+            pm2 reload ecomgrove-fe --update-env || pm2 start ecosystem.config.js --only frontend
+            
+            # Cleanup
+            rm -f /tmp/deploy/frontend-build.tar.gz
 
-      - name: Deploy BE on EC2
-        uses: appleboy/ssh-action@v0.1.6
+      # Deploy Backend  
+      - name: Deploy Backend with PM2
+        uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 10m
           script: |
             cd /var/www/EcomGrove/ecomgrove-be
-            git fetch origin
+            
+            # Backup nhanh current version
+            if [ -d "node_modules" ]; then
+              mv node_modules node_modules.backup.$(date +%s)
+            fi
+            
+            # Update source code (chỉ pull thay vì reset hard)
+            git fetch origin --depth=1
             git checkout feat/add-staging
-            git reset --hard origin/feat/add-staging
-            npm install
-            pm2 restart ecomgrove-be || pm2 start ecosystem.config.js --only backend
+            git pull origin feat/add-staging
+            
+            # Extract pre-built dependencies
+            if [ -f "/tmp/deploy/backend-deps.tar.gz" ]; then
+              tar -xzf /tmp/deploy/backend-deps.tar.gz
+              rm -f /tmp/deploy/backend-deps.tar.gz
+            else
+              # Fallback: install on server (slower)
+              npm ci --prefer-offline --omit=dev
+            fi
+            
+            # Restart PM2
+            pm2 reload ecomgrove-be --update-env || pm2 start ecosystem.config.js --only backend
+            
+            # Cleanup old backups (giữ lại 2 bản backup gần nhất)
+            find /var/www/EcomGrove/ -name "*.backup.*" -mtime +1 -delete 2>/dev/null || true
+
+      # Health check (optional)
+      - name: Health Check
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "=== PM2 Status ==="
+            pm2 status
+            echo "=== System Resources ==="
+            free -h
+            df -h /var/www
