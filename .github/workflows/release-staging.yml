@@ -16,13 +16,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install & Build Next.js FE
         working-directory: ./ecomgrove-fe
         run: |
-          npm install
-          npm run build
+          npm ci
+          NEXT_TELEMETRY_DISABLED=1 npm run build
+
+      - name: Debug build output
+        working-directory: ./ecomgrove-fe
+        run: ls -R .next
 
       - name: Upload FE build to EC2 (Next.js)
         uses: appleboy/scp-action@v0.1.4
@@ -47,7 +51,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /var/www/EcomGrove/ecomgrove-fe
-            npm install --production
+            npm ci --omit=dev
             pm2 restart ecomgrove-fe || pm2 start ecosystem.config.js --only frontend
 
       - name: Deploy BE on EC2
@@ -61,5 +65,5 @@ jobs:
             git fetch origin
             git checkout feat/add-staging
             git reset --hard origin/feat/add-staging
-            npm install
+            npm ci
             pm2 restart ecomgrove-be || pm2 start ecosystem.config.js --only backend
