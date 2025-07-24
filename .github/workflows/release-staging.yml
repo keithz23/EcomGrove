@@ -1,4 +1,4 @@
-name: Deploy FE & BE to EC2 with PM2
+name: Deploy FE (Next.js) & BE to EC2 with PM2
 
 on:
   push:
@@ -11,31 +11,55 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Deploy to EC2 via SSH
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install & Build Next.js FE
+        working-directory: ./ecomgrove-fe
+        run: |
+          npm install
+          npm run build
+
+      - name: Upload FE build to EC2 (Next.js)
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: |
+            ecomgrove-fe/.next
+            ecomgrove-fe/public
+            ecomgrove-fe/package.json
+            ecomgrove-fe/package-lock.json
+            ecomgrove-fe/next.config.js
+            ecomgrove-fe/ecosystem.config.js
+          target: /var/www/ecomgrove-fe
+
+      - name: SSH & Install/Restart Next.js on EC2
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "Deploying EcomGrove..."
+            cd /var/www/ecomgrove-fe
+            npm install --production
+            pm2 restart ecomgrove-fe || pm2 start ecosystem.config.js --only frontend
 
-            cd /var/www/EcomGrove || exit 1
-
-            echo "Pulling latest changes..."
+      - name: Deploy BE on EC2
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/EcomGrove/ecomgrove-be
             git fetch origin
             git checkout feat/add-staging
             git reset --hard origin/feat/add-staging
-
-            echo "Deploying backend..."
-            cd ecomgrove-be
-            npm ci
-            pm2 start ecosystem.config.js --only backend || pm2 restart ecomgrove-be
-
-            echo "Deploying frontend..."
-            cd ../ecomgrove-fe
-            npm ci
-            npm run build
-            pm2 start ecosystem.config.js --only frontend || pm2 restart ecomgrove-fe
+            npm install
+            pm2 restart ecomgrove-be || pm2 start ecosystem.config.js --only backend
