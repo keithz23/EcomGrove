@@ -4,7 +4,6 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { ESortType } from 'src/common/enums/ESortType';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -30,7 +29,6 @@ export class ProductsService {
     if (!isAdmin) {
       where.isActive = 'true';
     }
-    console.log(isAdmin);
 
     if (typeof price === 'number') {
       where.price = { lt: price };

@@ -2,8 +2,6 @@ import { instance } from "@/lib/axios";
 import { IChangePassword, IUserSignup } from "@/app/types/user/user.interface";
 import { EAuthService } from "@/app/enums/services/auth/EAuthService";
 import { EService } from "@/app/enums/EService";
-import { AxiosRequestHeaders } from "axios";
-import { IResetPassword } from "@/app/types/auth/auth.inteface";
 
 export const authService = {
   signup: (data: IUserSignup) => {

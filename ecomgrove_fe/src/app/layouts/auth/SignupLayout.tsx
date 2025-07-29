@@ -38,9 +38,11 @@ export default function Signup() {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
-      await signup(data);
-      toast.success("Signup successful! Please log in.");
-      router.push("/login");
+      const res = await signup(data);
+      if (res && "user" in res && res.user) {
+        toast.success("Signup successful! Please log in.");
+        router.push("/login");
+      }
     } catch (error: unknown) {
       const err = error as ApiError;
       const message =

@@ -31,4 +31,5 @@ export interface IProfile {
   phone: string;
   picture: string;
   lastLoginAt: Date;
+  googleId?: string;
 }

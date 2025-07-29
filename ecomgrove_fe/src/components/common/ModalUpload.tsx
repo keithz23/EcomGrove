@@ -2,15 +2,18 @@ import { useState, useRef } from "react";
 import { CloudUpload, X } from "lucide-react";
 import toast from "react-hot-toast";
 import Image from "next/image";
+import { usersService } from "@/app/services/public/users.service";
 
 interface ModalUploadProps {
   isOpen: boolean;
   onClose: () => void;
+  onUploadSuccess?: () => void;
 }
 
 export const ModalUpload: React.FC<ModalUploadProps> = ({
   isOpen,
   onClose,
+  onUploadSuccess,
 }) => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -36,19 +39,30 @@ export const ModalUpload: React.FC<ModalUploadProps> = ({
   };
 
   const handleSubmit = async () => {
-    const headers = { "Content-Type": "multipart/form-data" };
     if (!selectedFile) {
       toast.error("Please select an image first!");
       return;
     }
 
     const formData = new FormData();
-    formData.append("imagePath", selectedFile);
+    formData.append("picture", selectedFile);
 
-    setIsLoading(true);
+    try {
+      setIsLoading(true);
+
+      const response = await usersService.uploadAvatar(formData);
+      toast.success(response.data.message || "Avatar updated successfully");
+      if (onUploadSuccess) onUploadSuccess();
+      onClose();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Upload failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancel = () => {
+    if (previewImage) URL.revokeObjectURL(previewImage);
     setPreviewImage(null);
     setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -67,7 +81,7 @@ export const ModalUpload: React.FC<ModalUploadProps> = ({
 
       {/* Modal Container */}
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4">
-        <div className="rounded-lg shadow-xl border border-gray-300 dark:border-gray-700 w-full max-w-md transform transition-all duration-300 bg-white dark:bg-gray-900 p-6 relative min-h-[28rem]">
+        <div className="shadow-xl border border-gray-300 dark:border-gray-700 w-full max-w-md transform transition-all duration-300 bg-white dark:bg-gray-900 p-6 relative min-h-[28rem]">
           {/* Image Preview */}
           {previewImage ? (
             <div className="relative">
@@ -113,21 +127,25 @@ export const ModalUpload: React.FC<ModalUploadProps> = ({
           {/* Action Buttons */}
           <div className="flex items-center justify-end space-x-3 mt-10">
             <button
-              className="py-2 px-4 rounded-md text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200 cursor-pointer"
+              className="py-2 px-4 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200 cursor-pointer"
               onClick={handleCancel}
             >
               Cancel
             </button>
             <button
-              className={`py-2 px-4 rounded-md text-white ${
+              className={`py-2 px-4 text-black flex items-center gap-2 ${
                 selectedFile
-                  ? "bg-indigo-500 hover:bg-indigo-600 cursor-pointer"
+                  ? "border hover:bg-electric-blue hover:text-white cursor-pointer"
                   : "bg-gray-400 cursor-not-allowed"
               } transition-all duration-200`}
-              disabled={!selectedFile}
+              disabled={!selectedFile || isLoading}
               onClick={handleSubmit}
             >
-              Save Change
+              {isLoading ? (
+                <span className="animate-spin rounded-full h-4 w-4 border-2 border-blacks border-t-transparent" />
+              ) : (
+                "Save Change"
+              )}
             </button>
           </div>
         </div>

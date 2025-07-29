@@ -41,7 +41,7 @@ type InformationFormValues = {
 
 export default function Profile() {
   const router = useRouter();
-  const { profile } = useProfile();
+  const { profile, refetch } = useProfile();
   const [isModalUploadOpen, setIsModalUploadOpen] = useState(false);
   const [isActive, setIsActive] = useState<string>("Profile");
   const [isInputActive, setIsInputActive] = useState<string>("");
@@ -96,7 +96,6 @@ export default function Profile() {
 
     try {
       const res = await authService.changePassword(data);
-      console.log(res);
 
       if (res.status === 201) {
         toast.success("Password changed successfully");
@@ -120,7 +119,7 @@ export default function Profile() {
                 src={`${
                   profile?.picture ||
                   "https://doodleipsum.com/700/avatar?i=bc3a7b2ecb91d1a6c511a620968c8a06"
-                }`}
+                }?v=${Date.now()}`}
                 alt="Profile picture"
                 referrerPolicy="no-referrer"
                 width={80}
@@ -296,13 +295,16 @@ export default function Profile() {
       <ModalUpload
         isOpen={isModalUploadOpen}
         onClose={() => setIsModalUploadOpen(false)}
+        onUploadSuccess={refetch}
       />
 
       <div className="min-h-screen container mx-auto px-4 py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="border border-gray-200 shadow-xl">
             <ul className="text-base" role="tablist">
-              {ProfileItems.map(({ id, name, icon }) => (
+              {ProfileItems.filter(
+                ({ name }) => !(name === "Change Password" && profile?.googleId)
+              ).map(({ id, name, icon }) => (
                 <li
                   key={id}
                   role="tab"
