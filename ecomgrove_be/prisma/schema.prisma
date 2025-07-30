@@ -37,7 +37,7 @@ model User {
   products      Product[]
   Cart          Cart[]
   Order         Order[]
-  Address       Address[]
+  address       Address[]
   AuditLog      AuditLog[]
 
   @@map("users")
@@ -250,17 +250,17 @@ model Address {
   userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id])
 
-  fullName  String
-  phone     String
-  street    String
-  city      String
-  district  String?
-  ward      String?
-  country   String  @default("Vietnam")
-  isDefault Boolean @default(false)
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  fullName           String
+  street             String
+  city               String
+  district           String?
+  ward               String?
+  zipCode            Int
+  countryCallingCode String   @map("country_calling_code")
+  country            String   @default("Vietnam")
+  
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   @@map("addresses")
 }

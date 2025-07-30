@@ -13,13 +13,13 @@ export class AddressesService {
   async create(createAddressDto: CreateAddressDto, userId: string) {
     const {
       fullName,
-      phone,
       street,
       city,
       district,
       ward,
       country,
-      isDefault,
+      zipCode,
+      countryCallingCode,
     } = createAddressDto;
 
     try {
@@ -31,23 +31,16 @@ export class AddressesService {
         throw new NotFoundException('User not found');
       }
 
-      if (isDefault) {
-        await this.prisma.address.updateMany({
-          where: { userId },
-          data: { isDefault: false },
-        });
-      }
-
       await this.prisma.address.create({
         data: {
           fullName,
-          phone,
           street,
           city,
           district,
           ward,
+          zipCode,
+          countryCallingCode,
           country: country || 'Vietnam',
-          isDefault: isDefault ?? false,
           userId,
         },
       });
@@ -70,13 +63,13 @@ export class AddressesService {
   ) {
     const {
       fullName,
-      phone,
       street,
       city,
       district,
       ward,
       country,
-      isDefault,
+      zipCode,
+      countryCallingCode,
     } = updateAddressDto;
 
     try {
@@ -88,24 +81,17 @@ export class AddressesService {
         throw new NotFoundException('Address not found or unauthorized');
       }
 
-      if (isDefault) {
-        await this.prisma.address.updateMany({
-          where: { userId },
-          data: { isDefault: false },
-        });
-      }
-
       await this.prisma.address.update({
         where: { id: addressId },
         data: {
           fullName,
-          phone,
           street,
           city,
           district,
           ward,
+          zipCode,
+          countryCallingCode,
           country: country || 'Vietnam',
-          isDefault: isDefault ?? false,
         },
       });
 
@@ -130,25 +116,9 @@ export class AddressesService {
         throw new NotFoundException('Address not found or unauthorized');
       }
 
-      const isDefault = address.isDefault;
-
       await this.prisma.address.delete({
         where: { id: addressId },
       });
-
-      if (isDefault) {
-        const otherAddress = await this.prisma.address.findFirst({
-          where: { userId },
-          orderBy: { createdAt: 'asc' },
-        });
-
-        if (otherAddress) {
-          await this.prisma.address.update({
-            where: { id: otherAddress.id },
-            data: { isDefault: true },
-          });
-        }
-      }
 
       return { message: 'Address deleted successfully' };
     } catch (error) {

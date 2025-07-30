@@ -1,14 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsBoolean } from 'class-validator';
+import { IsOptional, IsString, IsBoolean, IsNumber } from 'class-validator';
 
 export class CreateAddressDto {
   @ApiProperty()
   @IsString()
   fullName: string;
-
-  @ApiProperty()
-  @IsString()
-  phone: string;
 
   @ApiProperty()
   @IsString()
@@ -29,10 +25,14 @@ export class CreateAddressDto {
   ward: string;
 
   @ApiProperty()
+  @IsNumber()
+  zipCode: number;
+
+  @ApiProperty()
   @IsString()
   country: string;
 
   @ApiProperty()
-  @IsBoolean()
-  isDefault: boolean;
+  @IsString()
+  countryCallingCode: string;
 }

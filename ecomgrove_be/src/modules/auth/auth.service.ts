@@ -250,6 +250,7 @@ export class AuthService {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
+        include: { address: true },
       });
 
       if (!user) {

@@ -1,5 +1,5 @@
 "use client";
-import { Camera } from "lucide-react";
+import { Camera, MapPinHouse, Newspaper } from "lucide-react";
 import { JSX, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useAuthStore } from "../store/auth/useAuthStore";
@@ -214,11 +214,98 @@ export default function Profile() {
         </form>
       </div>
     ),
-    Address: <div className="p-5">Address</div>,
+    Address: (
+      <div className="">
+        <div className="flex flex-col border border-gray-200 p-7 shadow-2xl bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="">
+              <div className="flex items-center gap-x-4">
+                <Newspaper size={40} className="text-electric-blue" />
+                <h2 className="text-xl font-bold">Billing Address</h2>
+              </div>
+              <div className="py-3 px-14">
+                {profile?.address.map((pat) => (
+                  <ul className="flex flex-col gap-y-3" key={pat.id}>
+                    <li>
+                      <span className="font-semibold">Street:</span>{" "}
+                      {pat.street}
+                    </li>
+                    <li>
+                      <span className="font-semibold">City:</span> {pat.city}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Ward:</span> {pat.ward}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Phone:</span>{" "}
+                      {profile.phone}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Zip code:</span>{" "}
+                      {pat.zipCode}
+                    </li>
+                    <li>
+                      <span className="font-semibold">
+                        Country calling code:
+                      </span>{" "}
+                      {pat.countryCallingCode}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Country:</span>{" "}
+                      {pat.country}
+                    </li>
+                  </ul>
+                ))}
+              </div>
+            </div>
+            <div className="p-3">
+              <div className="flex items-center gap-x-4">
+                <MapPinHouse size={40} className="text-electric-blue" />
+                <h2 className="text-xl font-bold">Shipping Address</h2>
+              </div>
+              <div className="py-3 px-14">
+                {profile?.address.map((pat) => (
+                  <ul className="flex flex-col gap-y-3" key={pat.id}>
+                    <li>
+                      <span className="font-semibold">Street:</span>{" "}
+                      {pat.street}
+                    </li>
+                    <li>
+                      <span className="font-semibold">City:</span> {pat.city}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Ward:</span> {pat.ward}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Phone:</span>{" "}
+                      {profile.phone}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Zip code:</span>{" "}
+                      {pat.zipCode}
+                    </li>
+                    <li>
+                      <span className="font-semibold">
+                        Country calling code:
+                      </span>{" "}
+                      {pat.countryCallingCode}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Country:</span>{" "}
+                      {pat.country}
+                    </li>
+                  </ul>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
     "My Orders": <div className="p-5">My Orders</div>,
     Notification: <div className="p-5">Notification</div>,
     "Change Password": (
-      <div className="p-5">
+      <div className="">
         <div className="flex flex-col border border-gray-200 p-7 shadow-2xl bg-white">
           <h2 className="text-2xl font-semibold mb-6">Change Password</h2>
           <form onSubmit={handlePasswordSubmit(handleChangePasswordSubmit)}>
@@ -298,9 +385,9 @@ export default function Profile() {
         onUploadSuccess={refetch}
       />
 
-      <div className="min-h-screen container mx-auto px-4 py-10">
+      <div className="min-h-screen container mx-auto px-4 py-30">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="border border-gray-200 shadow-xl">
+          <div className="border border-gray-200 shadow-xl sticky top-32 h-fit">
             <ul className="text-base" role="tablist">
               {ProfileItems.filter(
                 ({ name }) => !(name === "Change Password" && profile?.googleId)

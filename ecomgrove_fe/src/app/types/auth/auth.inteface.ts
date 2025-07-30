@@ -1,4 +1,5 @@
 import { BaseResponse } from "@/app/common/types/baseResponse.interface";
+import { IAddress } from "../address/address.interface";
 export interface User {
   id: string;
   name: string;
@@ -32,4 +33,5 @@ export interface IProfile {
   picture: string;
   lastLoginAt: Date;
   googleId?: string;
+  address: IAddress[];
 }
