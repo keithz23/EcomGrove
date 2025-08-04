@@ -15,7 +15,6 @@ export const rolesService = {
 
   updateRole: (updateRoleType: IUpdateRole) => {
     const url = `${EService.ADMIN_SERVICE}/${EAdminService.ROLES}/${ERoleService.UPDATE_ROLE}`;
-    console.log(`update data:: ${JSON.stringify(updateRoleType)}`);
     return instance.patch(url, updateRoleType);
   },
 

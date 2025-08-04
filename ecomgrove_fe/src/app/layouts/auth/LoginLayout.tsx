@@ -12,13 +12,31 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useWindowEvents } from "@/app/hooks/useWindowsEvent";
 import { AuthResponse } from "@/app/types/auth/auth.inteface";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 type FormValues = {
   email: string;
   password: string;
 };
 
-const callBackUrl = process.env.NEXT_PUBLIC_CALLBACK_URL ?? "";
+const config = {
+  development: {
+    callbackUrl: "http://localhost:8000/api/v1/auth/redirect",
+    apiUrl: "http://localhost:8000",
+  },
+  production: {
+    callbackUrl: process.env.NEXT_PUBLIC_CALLBACK_URL || "",
+    apiUrl: process.env.NEXT_PUBLIC_API_URL || "",
+  },
+};
+
+const getCallbackUrl = () => {
+  const isDev = process.env.NODE_ENV === "development";
+  const currentConfig = isDev ? config.development : config.production;
+
+  return currentConfig.callbackUrl;
+};
 
 const LoginLayout = () => {
   const router = useRouter();
@@ -36,9 +54,38 @@ const LoginLayout = () => {
   });
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    const response = (await login(data.email, data.password)) as AuthResponse;
-    if (response.status == 200 && response.data.user) {
-      router.push("/");
+    try {
+      const response = (await login(data.email, data.password)) as AuthResponse;
+
+      if (response.status === 200 && response.data.user) {
+        toast.success("Login successfully");
+        router.push("/");
+      }
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const message = error.response?.data?.message || "Login failed";
+
+        if (status === 401) {
+          toast.error("Invalid Credentials");
+        } else {
+          toast.error(message);
+        }
+      }
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    try {
+      const callbackUrl = getCallbackUrl();
+      if (!callbackUrl) {
+        console.error("Callback URL is not configured");
+        return;
+      }
+
+      window.location.href = callbackUrl;
+    } catch (error) {
+      console.error("Error during Google login:", error);
     }
   };
 
@@ -93,15 +140,18 @@ const LoginLayout = () => {
             </p>
 
             <div className="flex justify-center mb-4 sm:mb-5">
-              <Link href={`${callBackUrl}`}>
-                <Button variant={"outline"} className="px-10 py-7">
-                  <img
-                    src="https://shofy-svelte.vercel.app/img/icon/login/google.svg"
-                    alt=""
-                  />
-                  Sign in with Google
-                </Button>
-              </Link>
+              <Button
+                variant={"outline"}
+                className="px-10 py-7"
+                onClick={handleGoogleLogin}
+                type="button"
+              >
+                <img
+                  src="https://shofy-svelte.vercel.app/img/icon/login/google.svg"
+                  alt="Google"
+                />
+                Sign in with Google
+              </Button>
             </div>
 
             <div className="mb-4 text-sm text-center text-gray-400 sm:mb-5">

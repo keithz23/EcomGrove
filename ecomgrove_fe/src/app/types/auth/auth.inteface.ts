@@ -1,4 +1,5 @@
 import { BaseResponse } from "@/app/common/types/baseResponse.interface";
+import { IAddress } from "../address/address.interface";
 export interface User {
   id: string;
   name: string;
@@ -20,4 +21,17 @@ export interface IResetPassword {
   token: string;
   newPassword: string;
   confirmPassword: string;
+}
+
+export interface IProfile {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  phone: string;
+  picture: string;
+  lastLoginAt: Date;
+  googleId?: string;
+  address: IAddress[];
 }

@@ -1,6 +1,6 @@
 "use client";
-import { Camera } from "lucide-react";
-import { JSX, useState } from "react";
+import { Camera, MapPinHouse, Newspaper } from "lucide-react";
+import { JSX, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useAuthStore } from "../store/auth/useAuthStore";
 import { useRouter } from "next/navigation";
@@ -20,8 +20,12 @@ import {
   InformationFields,
 } from "../types/profile/profile.interface";
 import Image from "next/image";
+import useProfile from "../hooks/useProfile";
+import { getErrorMessage } from "../utils/getMessageError.util";
+import { authService } from "../services/public/auth.service";
+import toast from "react-hot-toast";
 
-type FormValues = {
+type ChangePasswordFormValues = {
   oldPassword: string;
   newPassword: string;
   confirmPassword: string;
@@ -36,6 +40,8 @@ type InformationFormValues = {
 };
 
 export default function Profile() {
+  const router = useRouter();
+  const { profile, refetch } = useProfile();
   const [isModalUploadOpen, setIsModalUploadOpen] = useState(false);
   const [isActive, setIsActive] = useState<string>("Profile");
   const [isInputActive, setIsInputActive] = useState<string>("");
@@ -47,28 +53,61 @@ export default function Profile() {
     handleSubmit: handlePasswordSubmit,
     formState: { errors: passwordErrors },
     reset: resetPasswordForm,
-  } = useForm<FormValues>({ mode: "onBlur" });
+  } = useForm<ChangePasswordFormValues>({ mode: "onBlur" });
 
   // Form hooks for Information
   const {
     register: registerInfo,
     handleSubmit: handleInfoSubmit,
     formState: { errors: infoErrors },
-    setValue: setInfoValue,
+    reset,
   } = useForm<InformationFormValues>({ mode: "onBlur" });
+
+  useEffect(() => {
+    if (profile) {
+      reset({
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        username: profile.username || "",
+        email: profile.email || "",
+        phoneNumber: profile.phone || "",
+      });
+    }
+  }, [profile, reset]);
 
   const handleModalUpload = () => setIsModalUploadOpen(!isModalUploadOpen);
 
   const handleLogout = () => {
     logout();
-    useRouter().push("/login");
+    router.push("/login");
   };
 
   const handleActiveTab = (tab: string) => setIsActive(tab);
 
   const handleActiveInput = (input: string) => setIsInputActive(input);
 
-  const handleChangePasswordSubmit = async (data: FormValues) => {};
+  const handleChangePasswordSubmit = async (data: ChangePasswordFormValues) => {
+    const { newPassword, confirmPassword } = data;
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Confirm password does not match");
+      return;
+    }
+
+    try {
+      const res = await authService.changePassword(data);
+
+      if (res.status === 201) {
+        toast.success("Password changed successfully");
+        resetPasswordForm();
+        logout();
+        router.push("/login");
+      }
+    } catch (error) {
+      const msg = getErrorMessage(error);
+      toast.error(msg || "Failed to change password");
+    }
+  };
 
   const tabContent: Record<string, JSX.Element> = {
     Profile: (
@@ -77,7 +116,10 @@ export default function Profile() {
           <div className="flex gap-x-4 items-center">
             <div className="relative w-20 h-20" onClick={handleModalUpload}>
               <Image
-                src={`https://vn4u.vn/wp-content/uploads/2023/09/logo-co-tinh-nhat-quan-2.png`}
+                src={`${
+                  profile?.picture ||
+                  "https://doodleipsum.com/700/avatar?i=bc3a7b2ecb91d1a6c511a620968c8a06"
+                }?v=${Date.now()}`}
                 alt="Profile picture"
                 referrerPolicy="no-referrer"
                 width={80}
@@ -88,7 +130,9 @@ export default function Profile() {
                 <Camera className="h-4 w-4 text-white" />
               </div>
             </div>
-            <span className="text-2xl font-semibold">Welcome!</span>
+            <span className="text-2xl font-semibold">
+              Welcome, {profile?.username}!
+            </span>
           </div>
           <button
             className="px-4 py-2 border border-gray-300 cursor-pointer hover:bg-electric-blue hover:text-white transition"
@@ -170,18 +214,101 @@ export default function Profile() {
         </form>
       </div>
     ),
-    Address: <div className="p-5">Address</div>,
+    Address: (
+      <div className="">
+        <div className="flex flex-col border border-gray-200 p-7 shadow-2xl bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="">
+              <div className="flex items-center gap-x-4">
+                <Newspaper size={40} className="text-electric-blue" />
+                <h2 className="text-xl font-bold">Billing Address</h2>
+              </div>
+              <div className="py-3 px-14">
+                {profile?.address.map((pat) => (
+                  <ul className="flex flex-col gap-y-3" key={pat.id}>
+                    <li>
+                      <span className="font-semibold">Street:</span>{" "}
+                      {pat.street}
+                    </li>
+                    <li>
+                      <span className="font-semibold">City:</span> {pat.city}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Ward:</span> {pat.ward}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Phone:</span>{" "}
+                      {profile.phone}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Zip code:</span>{" "}
+                      {pat.zipCode}
+                    </li>
+                    <li>
+                      <span className="font-semibold">
+                        Country calling code:
+                      </span>{" "}
+                      {pat.countryCallingCode}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Country:</span>{" "}
+                      {pat.country}
+                    </li>
+                  </ul>
+                ))}
+              </div>
+            </div>
+            <div className="p-3">
+              <div className="flex items-center gap-x-4">
+                <MapPinHouse size={40} className="text-electric-blue" />
+                <h2 className="text-xl font-bold">Shipping Address</h2>
+              </div>
+              <div className="py-3 px-14">
+                {profile?.address.map((pat) => (
+                  <ul className="flex flex-col gap-y-3" key={pat.id}>
+                    <li>
+                      <span className="font-semibold">Street:</span>{" "}
+                      {pat.street}
+                    </li>
+                    <li>
+                      <span className="font-semibold">City:</span> {pat.city}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Ward:</span> {pat.ward}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Phone:</span>{" "}
+                      {profile.phone}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Zip code:</span>{" "}
+                      {pat.zipCode}
+                    </li>
+                    <li>
+                      <span className="font-semibold">
+                        Country calling code:
+                      </span>{" "}
+                      {pat.countryCallingCode}
+                    </li>
+                    <li>
+                      <span className="font-semibold">Country:</span>{" "}
+                      {pat.country}
+                    </li>
+                  </ul>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
     "My Orders": <div className="p-5">My Orders</div>,
     Notification: <div className="p-5">Notification</div>,
     "Change Password": (
-      <div className="p-5">
+      <div className="">
         <div className="flex flex-col border border-gray-200 p-7 shadow-2xl bg-white">
           <h2 className="text-2xl font-semibold mb-6">Change Password</h2>
-          <form
-            onSubmit={handlePasswordSubmit(async (data) => {
-              const result = await handleChangePasswordSubmit(data);
-            })}
-          >
+          <form onSubmit={handlePasswordSubmit(handleChangePasswordSubmit)}>
             {ChangePasswordInput.map((row) => (
               <div
                 key={row.id}
@@ -203,21 +330,26 @@ export default function Profile() {
                       type={field.type}
                       label={field.label}
                       className={`${
-                        passwordErrors[field.name as keyof FormValues]
+                        passwordErrors[
+                          field.name as keyof ChangePasswordFormValues
+                        ]
                           ? "border-red-500"
                           : ""
                       }`}
                       {...register(
-                        field.name as keyof FormValues,
+                        field.name as keyof ChangePasswordFormValues,
                         field.validations
                       )}
                     />
 
-                    {passwordErrors[field.name as keyof FormValues] && (
+                    {passwordErrors[
+                      field.name as keyof ChangePasswordFormValues
+                    ] && (
                       <p className="text-red-500 text-xs mt-1">
                         {
-                          passwordErrors[field.name as keyof FormValues]
-                            ?.message
+                          passwordErrors[
+                            field.name as keyof ChangePasswordFormValues
+                          ]?.message
                         }
                       </p>
                     )}
@@ -250,13 +382,16 @@ export default function Profile() {
       <ModalUpload
         isOpen={isModalUploadOpen}
         onClose={() => setIsModalUploadOpen(false)}
+        onUploadSuccess={refetch}
       />
 
-      <div className="min-h-screen container mx-auto px-4 py-10">
+      <div className="min-h-screen container mx-auto px-4 py-30">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="border border-gray-200 shadow-xl">
+          <div className="border border-gray-200 shadow-xl sticky top-32 h-fit">
             <ul className="text-base" role="tablist">
-              {ProfileItems.map(({ id, name, icon }) => (
+              {ProfileItems.filter(
+                ({ name }) => !(name === "Change Password" && profile?.googleId)
+              ).map(({ id, name, icon }) => (
                 <li
                   key={id}
                   role="tab"

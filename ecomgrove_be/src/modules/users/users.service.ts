@@ -104,4 +104,33 @@ export class UsersService {
     // const { password, ...safeUser } = user;
     return user;
   }
+
+  async uploadAvatar(id: string, picture: string) {
+    try {
+      const existingUser = await this.prisma.user.findUnique({
+        where: { id },
+        select: { id: true },
+      });
+
+      if (!existingUser) {
+        throw new NotFoundException('User not found');
+      }
+
+      await this.prisma.user.update({
+        where: { id },
+        data: {
+          picture,
+        },
+      });
+
+      return { message: 'Avatar updated successfully' };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'An unexpected error occurred while uploading avatar',
+      );
+    }
+  }
 }

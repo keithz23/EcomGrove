@@ -33,7 +33,6 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await authService.signup(formData);
           set({ isLoading: false });
-          toast.success("Signup successful");
           return response.data as AuthResponse;
         } catch (error: unknown) {
           set({ isLoading: false });

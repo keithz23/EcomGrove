@@ -15,6 +15,7 @@ import { randomBytes } from 'crypto';
 import { MailService } from '../mail/mail.service';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -198,6 +199,74 @@ export class AuthService {
       }
       throw new InternalServerErrorException(
         'An unexpected error occurred while sending email',
+      );
+    }
+  }
+
+  async changePassword(changePasswordDto: ChangePasswordDto, userId: string) {
+    const { oldPassword, newPassword, confirmPassword } = changePasswordDto;
+
+    try {
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+      if (!user) {
+        throw new BadRequestException('User not found');
+      }
+
+      const isOldPasswordValid = await bcrypt.compareSync(
+        oldPassword,
+        user.password,
+      );
+      if (!isOldPasswordValid) {
+        throw new BadRequestException('Old password is incorrect');
+      }
+
+      if (newPassword !== confirmPassword) {
+        throw new BadRequestException(
+          'New password and confirm password do not match',
+        );
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { password: hashedPassword },
+      });
+
+      return { message: 'Password changed successfully' };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'An unexpected error occurred while changing password',
+      );
+    }
+  }
+
+  async profile(userId: string) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { address: true },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      return {
+        data: user,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+
+      console.error('Error fetching user profile:', error);
+
+      throw new InternalServerErrorException(
+        'An unexpected error occurred while fetching user data',
       );
     }
   }

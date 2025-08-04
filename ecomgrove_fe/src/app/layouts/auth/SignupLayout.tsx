@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useAuthStore } from "@/app/store/auth/useAuthStore";
@@ -38,9 +38,11 @@ export default function Signup() {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
-      await signup(data);
-      toast.success("Signup successful! Please log in.");
-      router.push("/login");
+      const res = await signup(data);
+      if (res && "user" in res && res.user) {
+        toast.success("Signup successful! Please log in.");
+        router.push("/login");
+      }
     } catch (error: unknown) {
       const err = error as ApiError;
       const message =
@@ -177,7 +179,7 @@ export default function Signup() {
             </form>
           </div>
         </div>
-        
+
         <Footer />
       </div>
     </div>
