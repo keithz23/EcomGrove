@@ -36,6 +36,7 @@ import { UpdateCategoryDto } from '../categories/dto/update-category.dto';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 
 @Controller('admin')
+@UseGuards(CombinedAuthGuard, PermissionsGuard)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
@@ -59,7 +60,6 @@ export class AdminController {
 
   @Patch('users/update-user')
   @ApiConsumes('multipart/form-data')
-  @UseGuards(CombinedAuthGuard, PermissionsGuard)
   @Permissions('user:create')
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'picture', maxCount: 1 }], multerOptions),
@@ -86,7 +86,6 @@ export class AdminController {
   }
 
   @Get('users')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('user:read')
   @UsePipes(new ValidationPipe({ transform: true }))
   async findAllUser(@Query() query: PaginationQueryDto, @Req() req: Request) {
@@ -102,35 +101,30 @@ export class AdminController {
 
   // Roles
   @Post('roles/create-role')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('user:read', 'user:create')
   async createRole(@Body() createRoleDto: CreateRoleDto) {
     return this.adminService.createRole(createRoleDto);
   }
 
   @Patch('roles/update-role')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('user:read', 'user:create')
   async updateRole(@Body() updateRoleDto: UpdateRoleDto) {
     return this.adminService.updateRole(updateRoleDto);
   }
 
   @Delete('roles/delete-role/:id')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('user:read', 'user:create')
   async deleteRole(@Param('id') id: string) {
     return this.adminService.deleteRole(id);
   }
 
   @Get('roles/:id')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('user:read', 'user:create')
   async findOneRole(@Param('id') id: string) {
     return this.adminService.findOneRole(id);
   }
 
   @Get('roles')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('user:create')
   async findAllRoles(
     @Query('page') page: number = 1,
@@ -143,14 +137,12 @@ export class AdminController {
 
   // Permissions
   @Post('permissions/assign-permissions')
-  @UseGuards(CombinedAuthGuard)
-  @Permissions('user:create user:update')
+  @Permissions('user:update')
   async assignPerm(@Body() assignPermissiondDto: AssignPermissionDto) {
     return this.adminService.assignPermission(assignPermissiondDto);
   }
 
   @Get('permissions')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('user:create')
   async findAllPermissions(
     @Query('page') page: number = 1,
@@ -162,13 +154,13 @@ export class AdminController {
   }
 
   @Get('permissions/:id')
+  @Permissions('user:read')
   async findOnePermission(@Param('id') id: string) {
     return this.adminService.findOnePermissions(id);
   }
 
   // Permission group
   @Get('permissions-group')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('user:create')
   async findAllPermissionGroup(
     @Query('page') page: number = 1,
@@ -182,7 +174,6 @@ export class AdminController {
   // Product
   @Post('product/create-product')
   @ApiConsumes('multipart/form-data')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('product:create')
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'picture', maxCount: 1 }], multerOptions),
@@ -193,23 +184,16 @@ export class AdminController {
     @Req() req: Request,
   ) {
     const user = (req as any).user.sub;
-    let uploadedImageUrl: string | undefined;
     if (!files || !files.picture || files.picture.length === 0) {
       throw new BadRequestException('Image file is required');
     }
     const file = files.picture[0];
     const upload = await S3Service.uploadToS3({ imagePath: file }, 'product');
-    uploadedImageUrl = upload.url;
-    return this.adminService.createProduct(
-      createProductDto,
-      uploadedImageUrl,
-      user,
-    );
+    return this.adminService.createProduct(createProductDto, upload.url, user);
   }
 
   @Patch('product/update-product')
   @ApiConsumes('multipart/form-data')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('product:update')
   @UseInterceptors(FileFieldsInterceptor([{ name: 'picture', maxCount: 1 }]))
   async updateProduct(
@@ -234,14 +218,12 @@ export class AdminController {
   }
 
   @Delete('product/delete-product/:id')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('product:delete')
   async deleteProduct(@Param('id') id: string) {
     return this.adminService.deleteProduct(id);
   }
 
   @Get('product')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('product:read')
   async findAllProducts(
     @Query('page') page: number = 1,
@@ -265,7 +247,6 @@ export class AdminController {
   }
 
   @Get('product/:id')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('product:read', 'product:create')
   async findOneProduct(@Param('id') id: string) {
     return this.adminService.findOneProduct(id);
@@ -273,21 +254,18 @@ export class AdminController {
 
   // Categories
   @Post('categories/create-category')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('category:create')
   async createCategory(@Body() createCategoryDto: CreateCategoryDto) {
     return this.adminService.createCategories(createCategoryDto);
   }
 
   @Patch('categories/update-category')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('category:update')
   async updateCategory(@Body() updateCategoryDto: UpdateCategoryDto) {
     return this.adminService.updateCategory(updateCategoryDto);
   }
 
   @Get('categories')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('category:read')
   async findAllCategories(
     @Query('page') page: number = 1,
@@ -299,14 +277,12 @@ export class AdminController {
   }
 
   @Delete('categories/:id')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('category:delete')
   async deleteCategory(@Param('id') id: string) {
     return this.adminService.deleteCategory(id);
   }
 
   @Get('categories/:id')
-  @UseGuards(CombinedAuthGuard)
   @Permissions('category:read')
   async findOneCategory(@Param('id') id: string) {
     return this.adminService.findOneCategory(id);

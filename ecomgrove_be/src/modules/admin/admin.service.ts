@@ -94,7 +94,8 @@ export class AdminService {
         },
       });
 
-      const { password: _, ...safeUser } = user;
+      const safeUser = { ...user };
+      Reflect.deleteProperty(safeUser, 'password');
       return safeUser;
     } catch (error) {
       console.error('Error creating user:', error);
@@ -439,20 +440,20 @@ export class AdminService {
     }
   }
 
-  async findAllProducts(page, limit, all, sort, isAdmin, price, categories) {
+  async findAllProducts(page, limit, all, sort, _isAdmin, price, categories) {
     return this.productsService.findAllProducts(
       page,
       limit,
       all,
       sort,
-      isAdmin,
+      true,
       price,
       categories,
     );
   }
 
   async findOneProduct(id) {
-    return this.productsService.findOneProduct(id);
+    return this.productsService.findOneProduct(id, true);
   }
 
   // Categories

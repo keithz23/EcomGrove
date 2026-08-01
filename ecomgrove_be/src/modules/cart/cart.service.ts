@@ -123,12 +123,12 @@ export class CartService {
     }
   }
 
-  async updateCart(updateCartDto: UpdateCartDto) {
+  async updateCart(updateCartDto: UpdateCartDto, userId: string) {
     const { cartItemId, newQuantity } = updateCartDto;
     try {
       return this.prisma.$transaction(async (prisma) => {
-        const cartItem = await prisma.cart.findUnique({
-          where: { id: cartItemId },
+        const cartItem = await prisma.cart.findFirst({
+          where: { id: cartItemId, userId },
           include: {
             product: true,
           },
@@ -177,7 +177,7 @@ export class CartService {
     try {
       return await this.prisma.$transaction(async (prisma) => {
         const cartItem = await prisma.cart.findFirst({
-          where: { userId, productId: cartItemId },
+          where: { userId, id: cartItemId },
         });
 
         if (!cartItem) {
@@ -189,7 +189,7 @@ export class CartService {
         });
 
         await prisma.product.update({
-          where: { id: cartItemId },
+          where: { id: cartItem.productId },
           data: {
             stock: {
               increment: cartItem.quantity,
@@ -274,7 +274,7 @@ export class CartService {
           if (existingCart) {
             const newQuantity = existingCart.quantity + quantity;
 
-            if (newQuantity > product.stock) {
+            if (quantity > product.stock) {
               throw new BadRequestException(
                 `Not enough stock for product ${productId}`,
               );

@@ -4,7 +4,6 @@ import {
   Post,
   Body,
   Patch,
-  Param,
   Delete,
   UseGuards,
   Req,
@@ -34,10 +33,10 @@ export class CartController {
     return this.cartService.addToCart(addToCartDto, userId);
   }
 
-  @Patch(':id')
+  @Patch()
   @UseGuards(CombinedAuthGuard)
-  async updateCart(@Body() updateCartDto: UpdateCartDto) {
-    return this.cartService.updateCart(updateCartDto);
+  async updateCart(@Body() updateCartDto: UpdateCartDto, @Req() req: Request) {
+    return this.cartService.updateCart(updateCartDto, (req as any).user.sub);
   }
 
   @Delete('remove-from-cart')

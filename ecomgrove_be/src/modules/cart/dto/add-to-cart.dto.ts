@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString } from 'class-validator';
+import { IsInt, IsPositive, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class AddToCartDto {
   @ApiProperty()
@@ -7,6 +8,8 @@ export class AddToCartDto {
   productId: string;
 
   @ApiProperty()
-  @IsNumber()
+  @Type(() => Number)
+  @IsInt()
+  @IsPositive()
   quantity: number;
 }

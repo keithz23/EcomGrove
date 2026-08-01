@@ -6,7 +6,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -15,7 +14,7 @@ export class CategoriesService {
   async create(createCategoryDto: CreateCategoryDto) {
     const { name, description } = createCategoryDto;
 
-    const existingCategory = this.prisma.category.findUnique({
+    const existingCategory = await this.prisma.category.findUnique({
       where: { name },
     });
 
@@ -32,12 +31,12 @@ export class CategoriesService {
       });
 
       return categoriesData;
-    } catch (error) {
+    } catch {
       throw new InternalServerErrorException();
     }
   }
 
-  async findAllCategories(page: number, limit: number, all: string) {
+  async findAllCategories(page: number, limit: number, all: boolean) {
     const safePage = Math.max(1, page);
     const safeLimit = Math.min(Math.max(1, limit), 100);
     const skip = (safePage - 1) * safeLimit;
@@ -127,21 +126,5 @@ export class CategoriesService {
         'An unexpected error occured while fetching category data',
       );
     }
-  }
-
-  findAll() {
-    return `This action returns all categories`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} category`;
-  }
-
-  update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    return `This action updates a #${id} category`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} category`;
   }
 }

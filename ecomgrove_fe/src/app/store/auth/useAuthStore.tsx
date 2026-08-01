@@ -33,7 +33,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await authService.signup(formData);
           set({ isLoading: false });
-          return response.data as AuthResponse;
+          return (response.data.data ?? response.data) as AuthResponse;
         } catch (error: unknown) {
           set({ isLoading: false });
           if (error instanceof AxiosError && error.message) {

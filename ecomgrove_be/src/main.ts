@@ -6,11 +6,17 @@ import { setupSwagger } from './config/swagger.config';
 import helmet from 'helmet';
 import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
-import { HttpExceptionFilter } from './common/filters';
+import { json, raw, urlencoded } from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
   const configService = app.get(ConfigService);
+  const apiPrefix = configService.get<string>('config.api.prefix') ?? '';
+  const apiBasePath = apiPrefix ? `/${apiPrefix}` : '';
+
+  app.use(`${apiBasePath}/payments/webhook`, raw({ type: 'application/json' }));
+  app.use(json());
+  app.use(urlencoded({ extended: true }));
 
   // Security
   app.use(helmet());
@@ -24,8 +30,7 @@ async function bootstrap() {
   });
 
   // Global prefix
-  app.setGlobalPrefix(configService.get('config.api.prefix') ?? '');
-  // app.useGlobalFilters(new HttpExceptionFilter());
+  app.setGlobalPrefix(apiPrefix);
 
   // Global validation pipe
   app.useGlobalPipes(

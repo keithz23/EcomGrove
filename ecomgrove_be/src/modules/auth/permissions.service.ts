@@ -23,6 +23,8 @@ export class PermissionService {
       },
     });
 
+    if (!user) return [];
+
     const permissions = user.userRoles.flatMap((ur) =>
       ur.role.rolePermissions.map(
         (rp) => `${rp.permission.resource}:${rp.permission.action}`,

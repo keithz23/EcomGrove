@@ -5,6 +5,7 @@ import { create } from "zustand";
 
 interface CartItem {
   id: string;
+  cartItemId?: string;
   name: string;
   price: number;
   stock: number;
@@ -56,31 +57,43 @@ export const useCartStore = create<CartState>()((set, get) => ({
       toast.success("Product added to cart");
     }
 
-    set({ cart: updatedCart });
-
     try {
       await cartService.addToCart({
         productId: item.id,
         quantity: item.quantity,
       });
+      set({ cart: updatedCart });
+      await get().fetchCart();
     } catch (err) {
       console.error("Failed to sync addToCart", err);
       toast.error("Failed to add to cart");
     }
   },
 
-  removeFromCart: (id) => {
-    const updated = get().cart.filter((item) => item.id !== id);
-    set({ cart: updated });
+  removeFromCart: async (id) => {
+    const item = get().cart.find((cartItem) => cartItem.id === id);
+    if (!item?.cartItemId) return;
 
-    cartService.removeFromCart(id);
-    toast.success("Item removed from cart");
+    const updated = get().cart.filter((item) => item.id !== id);
+    try {
+      await cartService.removeFromCart(item.cartItemId);
+      set({ cart: updated });
+      toast.success("Item removed from cart");
+    } catch (error) {
+      console.error("Failed to remove cart item", error);
+      toast.error("Failed to remove cart item");
+    }
   },
 
-  clearCart: () => {
-    set({ cart: [] });
-    cartService.clearCart();
-    toast.success("Cart cleared");
+  clearCart: async () => {
+    try {
+      await cartService.clearCart();
+      set({ cart: [] });
+      toast.success("Cart cleared");
+    } catch (error) {
+      console.error("Failed to clear cart", error);
+      toast.error("Failed to clear cart");
+    }
   },
 
   getTotalPrice: () => {
@@ -98,6 +111,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
 
       const normalized = serverCart.map((item: any) => ({
         id: item.productId,
+        cartItemId: item.id,
         name: item.product.name,
         price: item.product.price,
         stock: item.product.stock,

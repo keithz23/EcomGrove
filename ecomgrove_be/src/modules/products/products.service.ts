@@ -15,7 +15,7 @@ export class ProductsService {
     limit: number,
     all: boolean,
     sort: string,
-    isAdmin: boolean,
+    includeInactive: boolean,
     price?: number,
     categories?: string | string[],
   ) {
@@ -26,7 +26,7 @@ export class ProductsService {
     // Build dynamic filters
     const where: any = {};
 
-    if (!isAdmin) {
+    if (!includeInactive) {
       where.isActive = 'true';
     }
 
@@ -150,10 +150,10 @@ export class ProductsService {
     }
   }
 
-  async findOneProduct(id: string) {
+  async findOneProduct(id: string, includeInactive = false) {
     try {
       const product = await this.prisma.product.findFirst({
-        where: { id },
+        where: { id, ...(includeInactive ? {} : { isActive: 'true' }) },
         include: {
           category: true,
         },

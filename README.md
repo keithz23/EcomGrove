@@ -4,9 +4,9 @@ EcomGrove is a modern and scalable eCommerce platform designed for seamless onli
 
 ## Tech Stack
 
-**Frontend:** Next.js, Zustand, React Hook Form, Tanstack Query
+**Frontend:** Next.js, Zustand, React Hook Form
 
-**Backend:** Node.js, NestJS, Prisma ORM, PostgreSQL, Redis, Docker
+**Backend:** Node.js, NestJS, Prisma ORM, PostgreSQL, Docker
 
 ## Prerequisites
 
@@ -29,13 +29,13 @@ cd EcomGrove
 
 #### **Frontend Installation**
 ```bash
-cd ecomgrove-fe
+cd ecomgrove_fe
 npm install
 ```
 
 #### **Backend Installation**
 ```bash
-cd ecomgrove-be
+cd ecomgrove_be
 npm install
 ```
 
@@ -43,7 +43,7 @@ npm install
 
 Create the required environment variable files for both frontend and backend.
 
-### **Frontend Environment (`ecomgrove-fe/.env`)**
+### **Frontend Environment (`ecomgrove_fe/.env`)**
 ```ini
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
 NEXT_PUBLIC_GOOGLE_CLIENT_SECRET=your_google_client_secret
@@ -55,7 +55,7 @@ NEXT_PUBLIC_PAYPAL_SECRET=your_paypal_secret
 NEXT_PUBLIC_PAYPAL_API=your_paypal_api
 ```
 
-### **Backend Environment (`ecomgrove-be/.env`)**
+### **Backend Environment (`ecomgrove_be/.env`)**
 ```ini
 DATABASE_USER=your_database_username
 DATABASE_PASSWORD=your_database_password
@@ -102,13 +102,20 @@ CORS_ORIGIN=your_cors_origin
 CLIENT_URL=your_client_url
 
 PORT=8000
+
+# Stripe Checkout (server-side only)
+STRIPE_SECRET_KEY=sk_test_your_secret_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+STRIPE_SUCCESS_URL=http://localhost:3000/payment/success
+STRIPE_CANCEL_URL=http://localhost:3000/payment/cancel
+PAYMENT_CURRENCY=vnd
 ```
 
 ## Database Setup
 
 ### **Initialize Prisma**
 ```bash
-cd ecomgrove-be
+cd ecomgrove_be
 npx prisma generate
 npx prisma migrate dev --name init
 ```
@@ -131,14 +138,14 @@ npx prisma db push
 
 ### **Start Backend**
 ```bash
-cd ecomgrove-be
+cd ecomgrove_be
 npm run start:dev
 ```
 The backend server will run on **http://localhost:8000**
 
 ### **Start Frontend**
 ```bash
-cd ecomgrove-fe
+cd ecomgrove_fe
 npm run dev
 ```
 The frontend will run on **http://localhost:3000** (default Next.js port)

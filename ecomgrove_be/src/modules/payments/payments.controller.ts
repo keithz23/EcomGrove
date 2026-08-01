@@ -1,34 +1,59 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { Request } from 'express';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
+import { CombinedAuthGuard } from '../auth/guards/combined.guard';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post()
-  create(@Body() createPaymentDto: CreatePaymentDto) {
-    return this.paymentsService.create(createPaymentDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.paymentsService.findAll();
+  @UseGuards(CombinedAuthGuard)
+  create(@Body() dto: CreatePaymentDto, @Req() req: Request) {
+    return this.paymentsService.create((req as any).user.sub, dto);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.paymentsService.findOne(+id);
+  @UseGuards(CombinedAuthGuard)
+  findOne(@Param('id') id: string, @Req() req: Request) {
+    return this.paymentsService.findOne((req as any).user.sub, id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePaymentDto: UpdatePaymentDto) {
-    return this.paymentsService.update(+id, updatePaymentDto);
+  @Post('webhook')
+  @HttpCode(HttpStatus.OK)
+  async webhook(
+    @Req() req: Request,
+    @Headers('stripe-signature') signature?: string,
+  ) {
+    if (!signature || !Buffer.isBuffer(req.body)) {
+      throw new BadRequestException('Missing Stripe signature or raw body');
+    }
+    const event = this.paymentsService.constructWebhookEvent(
+      req.body,
+      signature,
+    );
+    return this.paymentsService.processWebhook(event, req.body);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.paymentsService.remove(+id);
+  @Post('reconcile')
+  @UseGuards(CombinedAuthGuard, PermissionsGuard)
+  @Permissions('order:update')
+  reconcile() {
+    return this.paymentsService.reconcilePendingPayments();
   }
 }

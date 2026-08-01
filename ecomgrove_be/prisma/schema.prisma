@@ -39,6 +39,7 @@ model User {
   Order         Order[]
   address       Address[]
   AuditLog      AuditLog[]
+  paymentIntents PaymentIntent[]
 
   @@map("users")
 }
@@ -224,11 +225,124 @@ model Order {
   note    String?
   address String?
   items   OrderItem[]
+  paymentIntents PaymentIntent[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("orders")
+}
+
+enum PaymentProvider {
+  STRIPE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELED
+  EXPIRED
+  REFUNDED
+}
+
+enum WebhookEventStatus {
+  RECEIVED
+  PROCESSED
+  IGNORED
+  FAILED
+}
+
+enum ReconciliationResult {
+  MATCHED
+  MISSING_PROVIDER
+  STATUS_MISMATCH
+}
+
+model PaymentIntent {
+  id                      String          @id @default(cuid())
+  orderId                 String          @map("order_id")
+  userId                  String          @map("user_id")
+  amount                  Int
+  currency                String
+  status                  PaymentStatus   @default(PENDING)
+  provider                PaymentProvider
+  idempotencyKey          String          @map("idempotency_key")
+  providerCheckoutSessionId String?       @unique @map("provider_checkout_session_id")
+  providerPaymentIntentId String?         @unique @map("provider_payment_intent_id")
+  createdAt               DateTime        @default(now()) @map("created_at")
+  updatedAt               DateTime        @updatedAt @map("updated_at")
+
+  order                   Order           @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  user                    User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  attempts                PaymentAttempt[]
+  events                  PaymentEvent[]
+  reconciliations         ReconciliationRecord[]
+
+  @@unique([userId, idempotencyKey])
+  @@index([orderId, status])
+  @@map("payment_intents")
+}
+
+model PaymentAttempt {
+  id                String        @id @default(cuid())
+  paymentIntentId   String        @map("payment_intent_id")
+  attemptNo         Int           @map("attempt_no")
+  status            PaymentStatus @default(PENDING)
+  providerSessionId String?       @unique @map("provider_session_id")
+  checkoutUrl       String?       @map("checkout_url")
+  failureReason     String?       @map("failure_reason")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  paymentIntent     PaymentIntent @relation(fields: [paymentIntentId], references: [id], onDelete: Restrict)
+
+  @@unique([paymentIntentId, attemptNo])
+  @@map("payment_attempts")
+}
+
+model WebhookEvent {
+  id              String             @id @default(cuid())
+  provider        PaymentProvider
+  providerEventId String             @unique @map("provider_event_id")
+  eventType       String             @map("event_type")
+  payloadHash     String             @map("payload_hash")
+  status          WebhookEventStatus @default(RECEIVED)
+  processedAt     DateTime?          @map("processed_at")
+  createdAt       DateTime           @default(now()) @map("created_at")
+
+  @@map("webhook_events")
+}
+
+model PaymentEvent {
+  id              String        @id @default(cuid())
+  paymentIntentId String        @map("payment_intent_id")
+  eventName       String        @map("event_name")
+  fromStatus      PaymentStatus? @map("from_status")
+  toStatus        PaymentStatus? @map("to_status")
+  metadata        Json?
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  paymentIntent   PaymentIntent @relation(fields: [paymentIntentId], references: [id], onDelete: Restrict)
+
+  @@index([paymentIntentId, createdAt])
+  @@map("payment_events")
+}
+
+model ReconciliationRecord {
+  id                String                @id @default(cuid())
+  paymentIntentId   String                @map("payment_intent_id")
+  providerReference String?               @map("provider_reference")
+  internalStatus    PaymentStatus         @map("internal_status")
+  providerStatus    String?               @map("provider_status")
+  result            ReconciliationResult
+  details           Json?
+  checkedAt         DateTime              @default(now()) @map("checked_at")
+
+  paymentIntent     PaymentIntent         @relation(fields: [paymentIntentId], references: [id], onDelete: Restrict)
+
+  @@index([paymentIntentId, checkedAt])
+  @@map("reconciliation_records")
 }
 
 model OrderItem {

@@ -1,5 +1,4 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { RefreshTokenDto } from '../auth/dto';
 import { AuthResponse, UserEntity } from 'src/common/interfaces';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
@@ -12,9 +11,9 @@ export class TokenService {
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
-  async refreshToken(refreshTokenDto: RefreshTokenDto): Promise<AuthResponse> {
+  async refreshToken(refreshToken: string): Promise<AuthResponse> {
     const refreshTokenRecord = await this.prisma.refreshToken.findUnique({
-      where: { token: refreshTokenDto.refreshToken },
+      where: { token: refreshToken },
       include: {
         user: {
           include: {

@@ -17,7 +17,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { Request, Response } from 'express';
-import { LoginDto, RefreshTokenDto, RegisterDto } from './dto';
+import { LoginDto, RegisterDto } from './dto';
 import { TokenService } from '../token/token.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CombinedAuthGuard } from './guards/combined.guard';
@@ -38,6 +38,29 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly tokenService: TokenService,
   ) {}
+
+  private setAuthCookies(
+    res: Response,
+    accessToken: string,
+    refreshToken: string,
+  ) {
+    const secure = process.env.NODE_ENV === 'production';
+    const baseOptions = {
+      httpOnly: true,
+      secure,
+      sameSite: 'lax' as const,
+      path: '/',
+    };
+
+    res.cookie('accessToken', accessToken, {
+      ...baseOptions,
+      maxAge: 1000 * 60 * 15,
+    });
+    res.cookie('refreshToken', refreshToken, {
+      ...baseOptions,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
+  }
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
@@ -61,8 +84,14 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 400, description: 'Bad Request' })
-  async register(@Body() registerDto: RegisterDto) {
-    return await this.authService.register(registerDto);
+  async register(
+    @Body() registerDto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { accessToken, refreshToken, user } =
+      await this.authService.register(registerDto);
+    this.setAuthCookies(res, accessToken, refreshToken);
+    return { status: HttpStatus.CREATED, data: { user } };
   }
 
   @Post('login')
@@ -81,19 +110,7 @@ export class AuthController {
     const { accessToken, refreshToken, user } =
       await this.authService.login(loginDto);
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 1000 * 60 * 15,
-    });
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    });
+    this.setAuthCookies(res, accessToken, refreshToken);
 
     return {
       status: 200,
@@ -110,8 +127,14 @@ export class AuthController {
     description: 'Token successfully refreshed',
   })
   @ApiResponse({ status: 401, description: 'Invalid refresh token' })
-  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
-    return this.tokenService.refreshToken(refreshTokenDto);
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { accessToken, refreshToken, user } =
+      await this.tokenService.refreshToken(req.cookies.refreshToken);
+    this.setAuthCookies(res, accessToken, refreshToken);
+    return { status: HttpStatus.OK, data: { user } };
   }
 
   @UseGuards(SoftAuthGuard)
@@ -144,19 +167,7 @@ export class AuthController {
     const user = (req as any).user;
     const response = await this.tokenService.generateTokens(user);
 
-    res.cookie('accessToken', response.accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 1000 * 60 * 15,
-    });
-
-    res.cookie('refreshToken', response.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    });
+    this.setAuthCookies(res, response.accessToken, response.refreshToken);
 
     return res.redirect(clientUrl);
   }
