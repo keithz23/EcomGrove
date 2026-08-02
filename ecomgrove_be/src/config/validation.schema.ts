@@ -19,5 +19,5 @@ export const validationSchema = Joi.object({
     .required(),
   STRIPE_SUCCESS_URL: Joi.string().uri().required(),
   STRIPE_CANCEL_URL: Joi.string().uri().required(),
-  PAYMENT_CURRENCY: Joi.string().length(3).default('vnd'),
+  PAYMENT_CURRENCY: Joi.string().length(3).default('usd'),
 });

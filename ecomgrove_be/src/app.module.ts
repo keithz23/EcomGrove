@@ -16,6 +16,7 @@ import { PermissionModule } from './modules/auth/permissions.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { OrdersModule } from './modules/orders/orders.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     AdminModule,
     MailModule,
     PaymentsModule,
+    OrdersModule,
   ],
   providers: [AppService],
 })

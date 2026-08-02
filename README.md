@@ -108,7 +108,7 @@ STRIPE_SECRET_KEY=sk_test_your_secret_key
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 STRIPE_SUCCESS_URL=http://localhost:3000/payment/success
 STRIPE_CANCEL_URL=http://localhost:3000/payment/cancel
-PAYMENT_CURRENCY=vnd
+PAYMENT_CURRENCY=usd
 ```
 
 ## Database Setup

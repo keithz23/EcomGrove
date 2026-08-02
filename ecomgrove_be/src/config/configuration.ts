@@ -46,6 +46,6 @@ export default registerAs('config', () => ({
       process.env.STRIPE_SUCCESS_URL || 'http://localhost:3000/payment/success',
     cancelUrl:
       process.env.STRIPE_CANCEL_URL || 'http://localhost:3000/payment/cancel',
-    currency: (process.env.PAYMENT_CURRENCY || 'vnd').toLowerCase(),
+    currency: (process.env.PAYMENT_CURRENCY || 'usd').toLowerCase(),
   },
 }));

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -24,6 +25,7 @@ type PaymentWithAttempts = Prisma.PaymentIntentGetPayload<{
 
 @Injectable()
 export class PaymentsService {
+  private readonly logger = new Logger(PaymentsService.name);
   private readonly stripe: Stripe;
 
   constructor(
@@ -45,14 +47,25 @@ export class PaymentsService {
       },
       include: { attempts: { orderBy: { attemptNo: 'desc' }, take: 1 } },
     });
-    if (existingPayment) return this.toPaymentResponse(existingPayment);
+    if (existingPayment) {
+      const hasCheckoutUrl = Boolean(existingPayment.attempts[0]?.checkoutUrl);
+      const canRetryCheckout =
+        existingPayment.status === PaymentStatus.PENDING && !hasCheckoutUrl;
+
+      return canRetryCheckout
+        ? this.refreshPendingPaymentAndCreateCheckout(userId, existingPayment)
+        : this.toPaymentResponse(existingPayment);
+    }
 
     const order = await this.prisma.order.findFirst({
       where: { id: dto.orderId, userId },
     });
     if (!order) throw new NotFoundException('Order not found');
 
-    const amount = Math.round(order.total);
+    const currency = this.configService.getOrThrow<string>(
+      'config.stripe.currency',
+    );
+    const amount = this.toStripeAmount(order.total, currency);
     if (!Number.isSafeInteger(amount) || amount <= 0) {
       throw new BadRequestException('Order total is not payable');
     }
@@ -65,9 +78,7 @@ export class PaymentsService {
             orderId: order.id,
             userId,
             amount,
-            currency: this.configService.getOrThrow<string>(
-              'config.stripe.currency',
-            ),
+            currency,
             provider: PaymentProvider.STRIPE,
             idempotencyKey: dto.idempotencyKey,
             events: {
@@ -97,78 +108,7 @@ export class PaymentsService {
       throw error;
     }
 
-    try {
-      const session = await this.stripe.checkout.sessions.create(
-        {
-          mode: 'payment',
-          client_reference_id: payment.id,
-          success_url: `${this.configService.getOrThrow<string>('config.stripe.successUrl')}?payment_intent_id=${payment.id}&session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${this.configService.getOrThrow<string>('config.stripe.cancelUrl')}?payment_intent_id=${payment.id}`,
-          metadata: { paymentIntentId: payment.id, orderId: order.id, userId },
-          payment_intent_data: {
-            metadata: { paymentIntentId: payment.id, orderId: order.id },
-          },
-          line_items: [
-            {
-              price_data: {
-                currency: payment.currency,
-                product_data: { name: `Order ${order.id}` },
-                unit_amount: payment.amount,
-              },
-              quantity: 1,
-            },
-          ],
-        },
-        { idempotencyKey: payment.id },
-      );
-
-      if (!session.url) {
-        throw new InternalServerErrorException(
-          'Stripe did not return a checkout URL',
-        );
-      }
-
-      const updated = await this.prisma.paymentIntent.update({
-        where: { id: payment.id },
-        data: {
-          providerCheckoutSessionId: session.id,
-          providerPaymentIntentId:
-            typeof session.payment_intent === 'string'
-              ? session.payment_intent
-              : null,
-          attempts: {
-            create: {
-              attemptNo: 1,
-              providerSessionId: session.id,
-              checkoutUrl: session.url,
-            },
-          },
-          events: {
-            create: {
-              eventName: 'STRIPE_CHECKOUT_SESSION_CREATED',
-              fromStatus: PaymentStatus.PENDING,
-              toStatus: PaymentStatus.PENDING,
-              metadata: { checkoutSessionId: session.id },
-            },
-          },
-        },
-        include: { attempts: { orderBy: { attemptNo: 'desc' }, take: 1 } },
-      });
-      return this.toPaymentResponse(updated);
-    } catch (error) {
-      await this.prisma.paymentEvent.create({
-        data: {
-          paymentIntentId: payment.id,
-          eventName: 'STRIPE_SESSION_CREATION_UNKNOWN',
-          fromStatus: PaymentStatus.PENDING,
-          toStatus: PaymentStatus.PENDING,
-          metadata: { reason: this.errorMessage(error) },
-        },
-      });
-      throw new InternalServerErrorException(
-        'Unable to start checkout. The payment remains pending; retry with the same idempotency key.',
-      );
-    }
+    return this.createStripeCheckoutSession(userId, payment);
   }
 
   async findOne(userId: string, paymentIntentId: string) {
@@ -302,6 +242,147 @@ export class PaymentsService {
     return undefined;
   }
 
+  private async createStripeCheckoutSession(
+    userId: string,
+    payment: PaymentWithAttempts,
+  ) {
+    try {
+      const session = await this.stripe.checkout.sessions.create(
+        {
+          mode: 'payment',
+          client_reference_id: payment.id,
+          success_url: `${this.configService.getOrThrow<string>('config.stripe.successUrl')}?payment_intent_id=${payment.id}&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${this.configService.getOrThrow<string>('config.stripe.cancelUrl')}?payment_intent_id=${payment.id}`,
+          metadata: {
+            paymentIntentId: payment.id,
+            orderId: payment.orderId,
+            userId,
+          },
+          payment_intent_data: {
+            metadata: { paymentIntentId: payment.id, orderId: payment.orderId },
+          },
+          line_items: [
+            {
+              price_data: {
+                currency: payment.currency,
+                product_data: { name: `Order ${payment.orderId}` },
+                unit_amount: payment.amount,
+              },
+              quantity: 1,
+            },
+          ],
+        },
+        { idempotencyKey: payment.id },
+      );
+
+      if (!session.url) {
+        throw new InternalServerErrorException(
+          'Stripe did not return a checkout URL',
+        );
+      }
+
+      const updated = await this.prisma.paymentIntent.update({
+        where: { id: payment.id },
+        data: {
+          providerCheckoutSessionId: session.id,
+          providerPaymentIntentId:
+            typeof session.payment_intent === 'string'
+              ? session.payment_intent
+              : null,
+          attempts: {
+            create: {
+              attemptNo: payment.attempts.length + 1,
+              providerSessionId: session.id,
+              checkoutUrl: session.url,
+            },
+          },
+          events: {
+            create: {
+              eventName: 'STRIPE_CHECKOUT_SESSION_CREATED',
+              fromStatus: PaymentStatus.PENDING,
+              toStatus: PaymentStatus.PENDING,
+              metadata: { checkoutSessionId: session.id },
+            },
+          },
+        },
+        include: { attempts: { orderBy: { attemptNo: 'desc' }, take: 1 } },
+      });
+      return this.toPaymentResponse(updated);
+    } catch (error) {
+      const reason = this.errorMessage(error);
+      this.logger.error(
+        `Stripe checkout session creation failed for payment ${payment.id}: ${reason}`,
+      );
+
+      await this.prisma.paymentEvent.create({
+        data: {
+          paymentIntentId: payment.id,
+          eventName: 'STRIPE_SESSION_CREATION_UNKNOWN',
+          fromStatus: PaymentStatus.PENDING,
+          toStatus: PaymentStatus.PENDING,
+          metadata: {
+            reason,
+            stripeErrorType: this.stripeErrorType(error),
+          },
+        },
+      });
+
+      if (this.isStripeRequestError(error)) {
+        throw new BadRequestException(`Stripe checkout rejected: ${reason}`);
+      }
+
+      throw new InternalServerErrorException(
+        `Unable to start Stripe Checkout: ${reason}`,
+      );
+    }
+  }
+
+  private async refreshPendingPaymentAndCreateCheckout(
+    userId: string,
+    payment: PaymentWithAttempts,
+  ) {
+    const order = await this.prisma.order.findFirst({
+      where: { id: payment.orderId, userId },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+
+    const currency = this.configService.getOrThrow<string>(
+      'config.stripe.currency',
+    );
+    const amount = this.toStripeAmount(order.total, currency);
+    if (!Number.isSafeInteger(amount) || amount <= 0) {
+      throw new BadRequestException('Order total is not payable');
+    }
+
+    if (payment.amount === amount && payment.currency === currency) {
+      return this.createStripeCheckoutSession(userId, payment);
+    }
+
+    const refreshed = await this.prisma.paymentIntent.update({
+      where: { id: payment.id },
+      data: {
+        amount,
+        currency,
+        events: {
+          create: {
+            eventName: 'PAYMENT_REPRICED_BEFORE_PROVIDER_SESSION',
+            fromStatus: PaymentStatus.PENDING,
+            toStatus: PaymentStatus.PENDING,
+            metadata: {
+              previousAmount: payment.amount,
+              previousCurrency: payment.currency,
+              amount,
+              currency,
+            },
+          },
+        },
+      },
+      include: { attempts: { orderBy: { attemptNo: 'desc' }, take: 1 } },
+    });
+
+    return this.createStripeCheckoutSession(userId, refreshed);
+  }
+
   private statusForEvent(event: Stripe.Event): PaymentStatus | undefined {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -403,5 +484,40 @@ export class PaymentsService {
 
   private errorMessage(error: unknown) {
     return error instanceof Error ? error.message : 'Unknown provider error';
+  }
+
+  private stripeErrorType(error: unknown) {
+    return typeof error === 'object' && error !== null && 'type' in error
+      ? String((error as { type?: string }).type)
+      : undefined;
+  }
+
+  private isStripeRequestError(error: unknown) {
+    return this.stripeErrorType(error) === 'StripeInvalidRequestError';
+  }
+
+  private toStripeAmount(total: number, currency: string) {
+    const zeroDecimalCurrencies = new Set([
+      'bif',
+      'clp',
+      'djf',
+      'gnf',
+      'jpy',
+      'kmf',
+      'krw',
+      'mga',
+      'pyg',
+      'rwf',
+      'ugx',
+      'vnd',
+      'vuv',
+      'xaf',
+      'xof',
+      'xpf',
+    ]);
+
+    return zeroDecimalCurrencies.has(currency.toLowerCase())
+      ? Math.round(total)
+      : Math.round(total * 100);
   }
 }
